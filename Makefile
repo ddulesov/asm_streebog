@@ -11,7 +11,7 @@ all: streebog.o util.o core.o
 	gcc -lc -fPIC util.o streebog.o core.o  -o streebog 
 	
 
-streebog.o:  streebog.s 
+streebog.o:  streebog.s add.s const.s 
 	$(CC) $(CFLAGS) -c streebog.s -o streebog.o
 	
 $(OBJ): $(SRC)

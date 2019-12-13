@@ -13,6 +13,7 @@ stage3(GOST34112012Context *CTX);
 void
 stage2(GOST34112012Context *CTX, const unsigned char *data);
 
+
 #else
 void
 stage3(GOST34112012Context *CTX){
