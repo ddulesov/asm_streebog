@@ -6,23 +6,35 @@
 const char *data = "01234567890123456789012345678901234567890123456789012345678901200000000";
 static  unsigned char digest[64];
 
+void print_buffer(const unsigned char* ptr, int ptr_len){
+	for(int i=0;i<ptr_len;i++){
+	 	printf("%02x ", ptr[i] );
+	}
+	puts("");
+}
+
 void print_digest(){
 	printf("digest:");
-	for(int i=0;i<64;i++){
-	 	printf("%02x ", digest[i] );
-	}
-	printf("\n");
+	print_buffer(digest, 64);
 }
+
+extern void _test();
 
 
 int main(){
 	int len = strlen( data );
 	
+	_test();
+	
+	return;
+	
 	GOST34112012Context ctx;
 	GOST34112012Init(&ctx, 64 );
+	printf("update\n");
 	GOST34112012Update(&ctx, data, len );
 	GOST34112012Final(&ctx, &digest[0]);
 	
+	/*
 	ctx.h.QWORD[0] = 0x0102030405060708ULL;
 	ctx.h.QWORD[1] = 0x0101010101010101ULL;
 	ctx.h.QWORD[2] = 0x0101010101010101ULL;
@@ -36,7 +48,7 @@ int main(){
 	GOST34112012Dump(&ctx);
 	add_bytes( CTX_FIELD(&ctx,h), CTX_FIELD(&ctx,N));
     GOST34112012Dump(&ctx);
-	
+	*/
 	print_digest();
 	GOST34112012Cleanup( &ctx );
  	return 0;

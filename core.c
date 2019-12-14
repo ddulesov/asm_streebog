@@ -119,4 +119,3 @@ GOST34112012Final(GOST34112012Context *CTX, unsigned char *digest)
     else
         memcpy(digest, &(CTX->h.QWORD[0]), 64);
 }
-
