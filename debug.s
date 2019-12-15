@@ -1,17 +1,68 @@
 .intel_syntax noprefix
 
+.macro ymm_prolog
+
+	push	rbp
+	push	rdi
+	push	rsi
+	push	rdx
+	push	rbx
+	push	rcx
+	mov		rbp, rsp
+	
+	sub		rsp, 32 * 10
+	and		rsp, 0xFFFFFFFFFFFFFFE0
+	
+	vmovdqa YMMWORD PTR [rsp], ymm0
+	vmovdqa YMMWORD PTR [rsp+32], ymm1
+	vmovdqa YMMWORD PTR [rsp+64], ymm2
+	vmovdqa YMMWORD PTR [rsp+96], ymm3
+	vmovdqa YMMWORD PTR [rsp+128], ymm4
+	vmovdqa YMMWORD PTR [rsp+160], ymm5
+	vmovdqa YMMWORD PTR [rsp+192], ymm6
+	vmovdqa YMMWORD PTR [rsp+224], ymm7
+	vmovdqa YMMWORD PTR [rsp+256], ymm8
+	vmovdqa YMMWORD PTR [rsp+288], ymm9
+	
+.endm
+
+.macro ymm_epilog
+	vmovdqa ymm0, YMMWORD PTR [rsp]
+	vmovdqa ymm1, YMMWORD PTR [rsp+32]
+	vmovdqa ymm2, YMMWORD PTR [rsp+64]
+	vmovdqa ymm3, YMMWORD PTR [rsp+96]
+	vmovdqa ymm4, YMMWORD PTR [rsp+128]
+	vmovdqa ymm5, YMMWORD PTR [rsp+160]
+	vmovdqa ymm6, YMMWORD PTR [rsp+192]
+	vmovdqa ymm7, YMMWORD PTR [rsp+224]
+	vmovdqa ymm8, YMMWORD PTR [rsp+256]
+	vmovdqa ymm9, YMMWORD PTR [rsp+288]
+	
+	mov		rsp, rbp
+	pop		rcx
+	pop		rbx
+	pop		rdx
+	pop		rsi
+	pop		rdi
+	pop		rbp
+
+.endm
+
 .section .rodata
-	sep_m   : .asciz    "-------------------------------"
+	sep_m   : .ascii    "-------------------------------"
+	null_m  : .asciz    ""
 	ymm_m	: .asciz    "\nymm:"
 
 .section .bss
 	.p2align 5,,15
-	.comm  buffer, 64
+	.comm  buffer, 4096
 	
 	
 .section .rodata
 	test_msg:
 		.asciz "_test: <%llx> \n"
+	printf_i:
+		.asciz "v:%llx\n"
 
 .section .text
 .extern  printf
@@ -40,21 +91,23 @@ _test:
 	#vmovdqa YMMWORD PTR [rdi], ymm0
 	#vmovdqa YMMWORD PTR [rdi+32], ymm9
 	
+	call	_print_ymm
+	
+	call	_print_ymm
+	
 	mov		rsi, 64
 	call	print_buffer
 	
-	mov		rax, 64
-	sub		rax, 64
-	jl		next_
 	
-	lea		rdi, ymm_m[rip]
-	call	puts
-next_:
-
-	lea		rdi, ymm_m[rip]
-	call	puts
 	
-	add		rsp, 8
+	vmovdqa	ymm9, AXC[rip]
+	xor		rax, rax
+	vpextrb	esi, xmm9, 15
+	
+	lea		rdi, printf_i[rip]
+	call	printf
+	
+	add 	rsp, 8
 	ret
 	
 	.p2align 4,,15
@@ -88,65 +141,50 @@ _restore_ymm:
 	ret
 	
 	.p2align 4,,15
+	
 _print_ymm:
-	push	rdi
-	push	rsi
-	push	rcx	
+	ymm_prolog
 	
-	call	_save_ymm
-	lea		rdi, ymm_m[rip]
-	call	puts
-	call	_restore_ymm
+	mov		rdi, rsp
+	call	print_ymm
 	
-	lea		rdi, buffer[rip]
-
-	vmovdqa YMMWORD PTR [rdi], ymm0
-	vmovdqa YMMWORD PTR [rdi+32], ymm1
-	mov		rsi, 64
-	call	_save_ymm
-	call	print_buffer
-	call	_restore_ymm
-
-	lea		rdi, buffer[rip]
-	vmovdqa YMMWORD PTR [rdi], ymm2
-	vmovdqa YMMWORD PTR [rdi + 32 ], ymm3
-	mov		rsi, 64
-	
-	call	_save_ymm
-	call	print_buffer
-	call	_restore_ymm
-	
-	#zero fill buffer
-	# lea		rdi, buffer[rip]
-	# mov		al, 0xF0
-	# mov 	rcx, 64
-	# rep		stosb
-	# lea		rdi, buffer[rip]
-	# mov	rsi, 64
-	# call	_save_ymm
-	# call	print_buffer
-	# call	_restore_ymm
-	
-	#print line
-	lea		rdi, sep_m[rip]
-	call	puts
-	
-	pop 	rcx
-	pop		rsi	
-	pop		rdi
+	ymm_epilog
 	ret
 	
 	.p2align 4,,15
 _print_buffer:
-	push	rdi
-	push	rsi
 	push	rcx
-	
+	ymm_prolog
+	xor		rax, rax
 	mov		rsi,  64
 	call	print_buffer
 	
-	pop 	rcx
-	pop		rsi
-	pop		rdi
+	ymm_epilog
+	pop		rcx
 	ret
+	
+	.p2align 4,,15
+_print_contex:
+	
+	ymm_prolog
+	
+	call	GOST34112012Dump
+	
+	ymm_epilog
+	ret
+
+.macro print_msg msg
+	.section .rodata
+		msg\@:           .asciz              "\msg"
+	.section .text
+	
+	ymm_prolog
+	xor		rax, rax
+	lea		rdi, null_m[rip]
+	call	puts	
+	lea 	rdi, msg\@[rip]
+	call 	puts
+	ymm_epilog
+	
+.endm
 	

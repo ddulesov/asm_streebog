@@ -1,5 +1,7 @@
 .intel_syntax noprefix
 
+#include "core.h"
+
 .include "const.s"
 .include "debug.s"
 	
@@ -7,12 +9,14 @@
 .extern  printf
 .extern  puts
 .extern  print_digest
+.extern  init
 .extern  GOST34112012Dump
 
 .global  stage2
 .global  stage3
 .global _test
 .global update_hash
+.global init 
 
 .include "add.s"
 .global  add_bytes
@@ -24,16 +28,7 @@ sh_N		= 64
 sh_Sigma	= 128
 sh_buffer   = 192
 
-.macro print_msg msg
-	.section .rodata
-		msg\@:           .asciz              "\msg"
-	.text
-	
-	lea		rdi, sep_m[rip]
-	call	puts	
-	lea 	rdi, msg\@[rip]
-	call 	puts
-.endm
+
 
 .type  add_bytes, @function
 .type     stage2, @function
@@ -41,46 +36,98 @@ sh_buffer   = 192
 .type      _test, @function
 .type        lps, @function
 .type     g_func, @function
+.type       init, @function
 
+
+	.p2align 4,,15
+cleanup:
+	mov		esi, dword ptr [rdi + sh_digsize]
+	
+	.p2align 4,,15
+init:
+	#rdi - context
+	#rsi - digest size
+	mov		rcx,  64
+	xor		rax, rax
+	mov		r8,  0x0101
+	cmp		rsi, 32
+	cmove	rax, r8
+	
+	rep		stosb
+	xor		al, al
+	mov		rcx,  264-64-4	#sizeof(	GOST34112012Context ) - 64
+	rep		stosb
+	
+	mov		dword ptr [rdi], esi
+	cmp		rsi, 64
+	cmove	rax, r8
+	shr		rax, 8 #1 - ok, 0 - error
+	dec		rax
+	ret
+	
+	.p2align 4,,15
+get_hash:
+	mov		ecx, dword ptr [rdi + sh_digsize]
+	mov		r8,   rsi
+	lea		rsi,  [rdi + sh_buffer + 64]
+	mov		rdi,  r8
+	sub		rsi,   rcx
+	rep		movsb
+	
+	ret
+	
 	.p2align 4,,15
 stage2:
 	#	rdi - context
 	#   rsi - data ptr
 
-	push	rbx
-	mov		r8, rdi
+	push	rdx
+	mov		rdx, rdi
+	
+	#debug 
+	call	_print_contex
+	print_msg "stage2"
+	
+	mov		rdi, rsi
+	call	_print_buffer
+	mov		rdi,  rdx
+	#end debug
+	
 	
 	# load h
-	vmovdqa ymm0, ymmword ptr [r8 + sh_h + 0 ]
-	vmovdqa ymm1, ymmword ptr [r8 + sh_h + 32 ]
+	vmovdqa ymm0, ymmword ptr [rdi + sh_h + 0 ]
+	vmovdqa ymm1, ymmword ptr [rdi + sh_h + 32 ]
 	
 	# load N
-	vmovdqa ymm2, ymmword ptr [r8 + sh_N + 0 ]
-	vmovdqa ymm3, ymmword ptr [r8 + sh_N + 32 ]
+	vmovdqa ymm2, ymmword ptr [rdi + sh_N + 0 ]
+	vmovdqa ymm3, ymmword ptr [rdi + sh_N + 32 ]
 	
 	#mov		rbx,  rsi  #rbx - data ptr
 	call	g_func #don't alter rsi
 	
 	#self.n.add(&BUFFER512);
-	mov		rax, [r8 + sh_N] #load low qword
+	mov		rax, [rdi + sh_N] #load low qword
 	add		rax,  0x0000000000000200;
-	mov 	[r8 + sh_N], rax
+	mov 	[rdi + sh_N], rax
 	
 	#self.sigma.add_bytes(data);
 	#mov		rsi, rbx
-	lea		rdi, [r8 + sh_Sigma]
+	lea		rdi, [rdi + sh_Sigma]
 	call	add_bytes
+	
 	
 	#mov		rdi, [rsp]
 	#call	GOST34112012Dump
-	vmovdqa ymmword ptr [r8 + sh_h + 0 ], ymm0
-	vmovdqa ymmword ptr [r8 + sh_h + 32 ], ymm1
+	mov		rdi, rdx #restore context
+	vmovdqa ymmword ptr [rdi + sh_h + 0 ], ymm0
+	vmovdqa ymmword ptr [rdi + sh_h + 32 ], ymm1
 	
 	vzeroupper
 	
-	pop		rbx
+	pop		rdx
 	ret
 	
+#--------------------------- update hash ------------
 	.p2align 4,,15
 update_hash:
 	push	rbx
@@ -144,29 +191,33 @@ exit_update:
 	vzeroupper
 	pop		rbx
 	ret
-	
+#------------------------stage3 -----------------------------	
 	.p2align 4,,15
 stage3:
 	push	rbx
+	push	rdx
+	push	rsi
 
 	# rdi - context
 	# rsi - digest ptr, can be NULL
-	mov		r8,  rdi  #context
-	mov 	r9,	 rsi
+	#mov		r8,  rdi  #context
 	
-	#print_msg "stage3"
 	
-	mov		ebx, dword ptr [r8 + sh_bufsize]  #bufsize
+	
+	call	_print_contex
+	print_msg "stage3"
+	
+	mov		ebx, dword ptr [rdi + sh_bufsize]  #bufsize
 	#load h
-	vmovdqa ymm0, ymmword ptr [r8 + sh_h + 0 ]
-	vmovdqa ymm1, ymmword ptr [r8 + sh_h + 32 ]
+	vmovdqa ymm0, ymmword ptr [rdi + sh_h + 0 ]
+	vmovdqa ymm1, ymmword ptr [rdi + sh_h + 32 ]
 	
 	mov		rcx, 64
 	sub		rcx, rbx  #self.bufsize < 64 {
 	je		n_buff
 	#pad
-	
-	lea		rdi,  [r8 + rbx + sh_buffer]
+	mov		rdx, rdi #save rdi
+	lea		rdi,  [rdi + rbx + sh_buffer]
 	mov		al, 0x01
 	stosb
 	
@@ -174,63 +225,83 @@ stage3:
 	dec		rcx
 	#zero  pad 
 	rep 	stosb	
+	
+	#debug  print buffer
 
+
+	print_msg  "stage3 buffer"
+	lea		rdi,  [rdx + sh_buffer]
+	call	_print_buffer	
+	#end debug
+	mov		rdi, rdx #restore rdi - context
 	.p2align 3,,10
 n_buff:	
 	#self.h.g(&self.n, self.buffer.as_ptr());
-	lea		rsi,  [r8 + sh_buffer ]
+	lea		rsi,  [rdi + sh_buffer ]
 	# load N
 	
-	vmovdqa ymm2, ymmword ptr [r8 + sh_N + 0 ]
-	vmovdqa ymm3, ymmword ptr [r8 + sh_N + 32 ]
+	vmovdqa ymm2, ymmword ptr [rdi + sh_N + 0 ]
+	vmovdqa ymm3, ymmword ptr [rdi + sh_N + 32 ]
 	call	g_func
 	
 	#buf.b64[0] = (self.bufsize as u64) << 3;
 	#self.n.add(&buf);
 	
 	shl		rbx, 3
-	mov		rax, [r8 + sh_N]
+	mov		rax, [rdi + sh_N]
 	add		rax, rbx
-	mov		[r8 + sh_N], rax
+	mov		[rdi + sh_N], rax
+	#rbx now free
 	
 	#self.sigma.add(&self.buffer);
-	lea		rsi, [r8 + sh_bufsize]
-	lea		rdi, [r8 + sh_Sigma]
+	lea		rsi, [rdi + sh_bufsize]
+	lea		rdi, [rdi + sh_Sigma]
 	call	add_bytes
+	mov		rdi, rdx #restore rdi - context
 	
 	#self.h.g(&BUFFER0, self.n.as_ptr());
 	#zerro buffer
-	vpxor 	ymm2,  ymm2, ymm2
-	vpxor 	ymm3,  ymm3, ymm3
-	lea		rsi, [r8 + sh_N]
+	vpxor 	ymm2, ymm2, ymm2
+	vpxor 	ymm3, ymm3, ymm3
+	lea		rsi, [rdi + sh_N]	
 	call	g_func
 	
 	#self.h.g(&BUFFER0, self.sigma.as_ptr());
 	#zerro buffer
 	vpxor 	ymm2,  ymm2, ymm2
 	vpxor 	ymm3,  ymm3, ymm3
-	lea		rsi, [r8 + sh_Sigma]
+	lea		rsi, [rdi + sh_Sigma]
 	call	g_func
 	
 	#save   ymm0, ymm1 to h
-	vmovdqa ymmword ptr [r8 + sh_h + 0 ], ymm0
-	vmovdqa ymmword ptr [r8 + sh_h + 32 ], ymm1
+	vmovdqa ymmword ptr [rdi + sh_h + 0 ], ymm0
+	vmovdqa ymmword ptr [rdi + sh_h + 32 ], ymm1
 	
 	#get    digest
+	#debug
+	call	_print_contex
+	#end debug
+	
 	mov		rax, 1
+	pop		rsi
+	pop		rdx
 	pop		rbx
-	test	r9,	 r9
+	
+	
+	
+	test	rsi, rsi
 	jnz		stage3_exit
 	ret
 	
 	.p2align 3,,10
 stage3_exit:
 	#return digest
-	lea		rcx,  [r8 + sh_digsize ] 
-	mov		rdi,   r9
-	lea		rsi,  [r8 + sh_buffer + 64]
-	sub		rsi,   rcx
-	rep		movsb
+	
+	# lea		rcx,  [r8 + sh_digsize ] 
+	# mov		rdi,   rsi
+	# lea		rsi,  [r8 + sh_buffer + 64]
+	# sub		rsi,   rcx
+	# rep		movsb
 	
 	xor		rax, rax
 	ret
@@ -251,8 +322,11 @@ g_func:
 	vmovdqu ymm4, ymmword ptr [rsi]
 	vmovdqu ymm5, ymmword ptr [rsi+32]
 	#TODO xor with ymm6,7 in advance
-	vmovdqa	ymm8, ymm4
-	vmovdqa	ymm9, ymm5
+	#vmovdqa	ymm8, ymm4
+	#vmovdqa	ymm9, ymm5
+	vpxor 	ymm6,  ymm6, ymm4
+	vpxor 	ymm7,  ymm7, ymm5
+	
 	
 	mov 	rcx, 12
 	lea		rsi, CXC[rip] # rsi - cx[i]
@@ -290,17 +364,28 @@ g_func_loop:
 	vpxor 	ymm1,  ymm5, ymm1	
 	#vmovdqu ymm4, YMMWORD [rdi]
 	#vmovdqu ymm5, YMMWORD [rdi+32]
-	vpxor 	ymm0,  ymm8, ymm0
-	vpxor 	ymm1,  ymm9, ymm1
+	
+	#vpxor 	ymm0,  ymm8, ymm0
+	#vpxor 	ymm1,  ymm9, ymm1
 	
 	vpxor 	ymm0,  ymm6, ymm0
 	vpxor 	ymm1,  ymm7, ymm1	
 
-	pop	rsi
+	pop		rsi
 	ret
 #-------------------------------------	
 	.p2align 4,,15
+	
+	#should save ch, rdi, rsi
 lps:
 	#ymm0,1  -> ymm2,3
+
+	
+	vpxor 	ymm0,  ymm3, ymm2
+	vpxor 	ymm1,  ymm0, ymm1
+	
+	print_msg	"lps"
+	#call	_print_ymm
+	
 	ret
 	

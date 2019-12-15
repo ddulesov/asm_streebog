@@ -2,7 +2,7 @@
 add_bytes:
 	xor		rcx, rcx
 	xor		rax, rax
-
+	#TODO remove unnesasary r8 r9 save
 	.p2align 3,,10
 loop:		
 	
@@ -21,8 +21,6 @@ loop:
 	jne		loop
 
 	ret
-	
-	
 	# mov		rax, qword ptr [rdi + 2*8 + 0] 
 	# adc		rax, qword ptr [rsi + 2*8 + 0]
 	# mov 	qword ptr [rdi + 2*8 + 0], rax	

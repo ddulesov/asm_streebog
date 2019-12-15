@@ -44,8 +44,10 @@ void
 GOST34112012Dump(GOST34112012Context *CTX)
 {
 #ifdef _DEBUG
+	CTX->name[63]='\0';
 	printf("%s", CTX->name );
 #endif
+	printf("\ndig  :%2u", CTX->digest_size);
     printf("\nh    :"); print_hex(CTX_FIELD(CTX,h), sizeof(CTX->h));
     printf("\nn    :"); print_hex(CTX_FIELD(CTX,N), sizeof(CTX->N));
     printf("\nsigma:"); print_hex(CTX_FIELD(CTX,Sigma), sizeof(CTX->Sigma));
@@ -114,7 +116,7 @@ GOST34112012Final(GOST34112012Context *CTX, unsigned char *digest)
     stage3(CTX);
     CTX->bufsize = 0;
 
-    if (CTX->digest_size == 256)
+    if (CTX->digest_size == 32)
         memcpy(digest, &(CTX->h.QWORD[4]), 32);
     else
         memcpy(digest, &(CTX->h.QWORD[0]), 64);

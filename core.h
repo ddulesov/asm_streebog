@@ -39,15 +39,10 @@ ALIGNED typedef struct GOST34112012Context
 
 #define  CTX_FIELD(C, fn)		(unsigned char*)&((C)->fn)
 
-
 void GOST34112012Dump(GOST34112012Context *CTX);
-
 void GOST34112012Init(GOST34112012Context *CTX, const unsigned int digest_size);
 void GOST34112012Update(GOST34112012Context *CTX, const unsigned char *data, size_t len); 
-
 void GOST34112012Final(GOST34112012Context *CTX, unsigned char *digest); 
-
 void GOST34112012Cleanup(GOST34112012Context *CTX);
 
-void 
-add_bytes(unsigned char* dst, const unsigned char* src);
+void add_bytes(unsigned char* dst, const unsigned char* src);

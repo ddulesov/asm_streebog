@@ -1,6 +1,6 @@
 OBJS  := util.o core.o
 SRC   := util.c core.c
-CFLAGS := -O2 -fPIC -DASM_STREEBOG -no-pie -mavx -mavx2
+CFLAGS := -O2 -g -fPIC -DASM_STREEBOG -no-pie -mavx -mavx2
 
 
 
