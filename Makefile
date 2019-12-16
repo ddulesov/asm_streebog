@@ -1,7 +1,7 @@
 OBJS  := util.o core.o
 SRC   := util.c core.c
 #-ggdb 
-CFLAGS := -O2 -fPIC -DASM_STREEBOG=1 -no-pie -mavx -mavx2 -masm=intel
+CFLAGS := -O3 -fPIC -DASM_STREEBOG=1 -no-pie -mavx -mavx2 -masm=intel
 
 all: streebog.o util.o core.o
 	
