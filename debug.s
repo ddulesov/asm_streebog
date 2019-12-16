@@ -78,104 +78,20 @@ _test:
 	vpxor	ymm1, ymm1, ymm1
 	
 	vmovdqa	ymm9, [rax]
-	vperm2f128 ymm1, ymm9, ymm9, 1
-	vpxor	   ymm0, ymm1, ymm9
-	#vmovdqa	ymm1, ymmword ptr [rax]
-	
-	lea		rdi, buffer[rip]
 
 	vperm2f128 ymm1, ymm9, ymm9, 1
+	vpblendd   ymm2, ymm9, ymm1, 15
 	
-	vmovdqa XMMWORD PTR [rdi], xmm9
-	vmovdqa XMMWORD PTR [rdi]+16, xmm1
+	#vmovdqa XMMWORD PTR [rdi], xmm9
+	#vmovdqa XMMWORD PTR [rdi]+16, xmm1
 	#vmovdqa YMMWORD PTR [rdi], ymm0
 	#vmovdqa YMMWORD PTR [rdi+32], ymm9
 	
-	call	_print_ymm
 	
 	call	_print_ymm
 	
-	mov		rsi, 64
-	call	print_buffer
-	
-	
-	
-	vmovdqa	ymm9, AXC[rip]
-	xor		rax, rax
-	vpextrb	esi, xmm9, 15
-	
-	lea		rdi, printf_i[rip]
-	call	printf
-	
-	mov		rcx, 0xFFFFFFFF
-	vmovdqa	ymm9, AXC[rip]
-	vmovdqa	ymm1, AXC[rip]+32
-_test_1:	
-	
-	vpxor	ymm0, ymm0, ymm9
-	vpxor	ymm1, ymm1, ymm9
-	vperm2f128 ymm1, ymm9, ymm9, 1
-
-	vpxor	ymm1, ymm1, ymm9
-	vpxor	ymm0, ymm0, ymm9
-	vperm2f128 ymm0, ymm9, ymm9, 1
-	
-	vpxor	ymm2, ymm2, ymm9
-	vpxor	ymm3, ymm3, ymm9
-	vperm2f128 ymm3, ymm9, ymm9, 1
-
-	vpxor	ymm0, ymm0, ymm9
-	vpxor	ymm1, ymm1, ymm9
-	vperm2f128 ymm1, ymm9, ymm9, 1
-	
-	vpxor	ymm0, ymm0, ymm9
-	vpxor	ymm1, ymm1, ymm9
-	vperm2f128 ymm1, ymm9, ymm9, 1
-
-	vpxor	ymm1, ymm1, ymm9
-	vpxor	ymm0, ymm0, ymm9
-	vperm2f128 ymm0, ymm9, ymm9, 1
-	
-	vpxor	ymm2, ymm2, ymm9
-	vpxor	ymm3, ymm3, ymm9
-	vperm2f128 ymm3, ymm9, ymm9, 1
-
-	vpxor	ymm0, ymm0, ymm9
-	vpxor	ymm1, ymm1, ymm9
-	vperm2f128 ymm1, ymm9, ymm9, 1
 
 
-	vpxor	ymm0, ymm0, ymm9
-	vpxor	ymm1, ymm1, ymm9
-	vperm2f128 ymm1, ymm9, ymm9, 1
-
-	vpxor	ymm1, ymm1, ymm9
-	vpxor	ymm0, ymm0, ymm9
-	vperm2f128 ymm0, ymm9, ymm9, 1
-	
-	vpxor	ymm2, ymm2, ymm9
-	vpxor	ymm3, ymm3, ymm9
-	vperm2f128 ymm3, ymm9, ymm9, 1
-
-	vpxor	ymm0, ymm0, ymm9
-	vpxor	ymm1, ymm1, ymm9
-	vperm2f128 ymm1, ymm9, ymm9, 1	
-	
-	vpxor	ymm0, ymm0, ymm9
-	vpxor	ymm1, ymm1, ymm9
-	vperm2f128 ymm1, ymm9, ymm9, 1
-
-	vpxor	ymm1, ymm1, ymm9
-	vpxor	ymm0, ymm0, ymm9
-	vperm2f128 ymm0, ymm9, ymm9, 1
-	
-	
-	dec     rcx
-
-
-	
-	jne	_test_1
-	
 	add 	rsp, 8
 	ret
 	

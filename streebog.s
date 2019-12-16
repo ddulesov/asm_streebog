@@ -4,21 +4,20 @@
 #include "core.h"
 
 .include "const.s"
-.include "debug.s"
 .include "lps.s"
 .include "add.s"
+
+.ifdef _DEBUG
+.include "debug.s"
+.endif
 	
 .section .text
-.extern  printf
-.extern  puts
-.extern  print_digest
-.extern  GOST34112012Dump
+#.extern  printf
+#.extern  puts
+#.extern  print_digest
+#.extern  GOST34112012Dump
 
-.global  stage2
-.global  stage3
 .global _test
-.global update_hash
-.global init 
 .global GOST34112012Final
 .global GOST34112012Update
 .global GOST34112012Init
@@ -79,7 +78,7 @@ stage2:  #should keep rdi!
 	push	rdx
 	mov		rdx, rdi
 	
-	vzeroupper
+	
 	prefetcht0 	qword ptr [rdi+64]
 	#debug 
 .ifdef _DEBUG
@@ -121,7 +120,7 @@ stage2:  #should keep rdi!
 	vmovdqa ymmword ptr [rdi + sh_h + 0 ], ymm0
 	vmovdqa ymmword ptr [rdi + sh_h + 32 ], ymm1
 	
-	vzeroupper
+	
 	
 	pop		rdx
 	ret
@@ -133,7 +132,7 @@ GOST34112012Update:
 	#rdi    - context
 	#rsi    - data pointer
 	#rdx    - size 
-	
+	vzeroupper
 	mov 	r8,  rdi # save context pointer
 	
 	mov		ebx, dword ptr [r8 + sh_bufsize] 
@@ -279,14 +278,14 @@ n_buff:
 	#save   ymm0, ymm1 to h
 	vmovdqa ymmword ptr [rdi + sh_h + 0 ], ymm0
 	vmovdqa ymmword ptr [rdi + sh_h + 32 ], ymm1
-	
+	vzeroupper
 	#get    digest
 	#debug
 .ifdef _DEBUG
 	call	_print_contex
 	#end debug
 .endif
-	vzeroupper
+	
 	
 	pop		rsi
 	pop		rdx
