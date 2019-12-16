@@ -12,7 +12,6 @@ lps:
 	vperm2f128 ymm9, ymm2, ymm2, 1
 	vperm2f128 ymm10, ymm3, ymm3, 1
 	
-	
 	lps_op	r8,  rdx,xmm2, 0    , 0, mov
 	lps_op	r8,  rdx,xmm2, 0 + 8, 1
 	lps_op	r8,  rdx,xmm3, 0 + 0, 4
@@ -22,7 +21,8 @@ lps:
 	lps_op	r8,  rdx,xmm9,  0 + 8, 3
 	lps_op	r8,  rdx,xmm10, 0 + 0, 6
 	lps_op	r8,  rdx,xmm10, 0 + 8, 7
-	mov	[rbp]   , r8
+	#mov	[rbp]   , r8
+	vpinsrq	xmm0, xmm0, r8, 0
 	
 	lps_op	r9,  rdx,xmm2, 1    , 0,   mov
 	lps_op	r9,  rdx,xmm2, 1 + 8, 1
@@ -33,7 +33,8 @@ lps:
 	lps_op	r9,  rdx,xmm9,  1 + 8, 3
 	lps_op	r9,  rdx,xmm10, 1 + 0, 6
 	lps_op	r9,  rdx,xmm10, 1 + 8, 7
-	mov [rbp]+8 , r9
+	#mov [rbp]+8 , r9
+	vpinsrq	xmm0, xmm0, r9, 1
 	
 	lps_op	r10, rdx,xmm2, 2    , 0, mov
 	lps_op	r10, rdx,xmm2, 2 + 8, 1
@@ -44,7 +45,8 @@ lps:
 	lps_op	r10, rdx,xmm9,  2 + 8, 3
 	lps_op	r10, rdx,xmm10, 2 + 0, 6
 	lps_op	r10, rdx,xmm10, 2 + 8, 7
-	mov	[rbp]+16, r10
+	#mov	[rbp]+16, r10
+	vpinsrq	xmm1, xmm1, r10, 0
 	
 	lps_op	r11, rdx,xmm2, 3    , 0, mov
 	lps_op	r11, rdx,xmm2, 3 + 8, 1
@@ -55,8 +57,11 @@ lps:
 	lps_op	r11, rdx,xmm9,  3 + 8, 3
 	lps_op	r11, rdx,xmm10, 3 + 0, 6
 	lps_op	r11, rdx,xmm10, 3 + 8, 7
-	mov [rbp]+24, r11
+	#mov [rbp]+24, r11
+	vpinsrq	xmm1, xmm1, r11, 1
+	vperm2f128   ymm0, ymm0, ymm1, 16
 	
+	# high part ----------------------------
 	lps_op	r8,  rdx,xmm2, 4    , 0, mov
 	lps_op	r8,  rdx,xmm2, 4 + 8, 1
 	lps_op	r8,  rdx,xmm3, 4 + 0, 4
@@ -66,7 +71,8 @@ lps:
 	lps_op	r8,  rdx,xmm9,  4 + 8, 3
 	lps_op	r8,  rdx,xmm10, 4 + 0, 6
 	lps_op	r8,  rdx,xmm10, 4 + 8, 7
-	mov	[rbp]+32 , r8
+	#mov	[rbp]+32 , r8
+	vpinsrq	xmm7, xmm7, r8, 0
 	
 	lps_op	r9,  rdx,xmm2, 5    , 0, mov
 	lps_op	r9,  rdx,xmm2, 5 + 8, 1
@@ -77,7 +83,8 @@ lps:
 	lps_op	r9,  rdx,xmm9,  5 + 8, 3
 	lps_op	r9,  rdx,xmm10, 5 + 0, 6
 	lps_op	r9,  rdx,xmm10, 5 + 8, 7	
-	mov [rbp]+40 , r9
+	#mov [rbp]+40 , r9
+	vpinsrq	xmm7, xmm7, r9, 1
 	
 	lps_op	r10, rdx,xmm2, 6    , 0, mov
 	lps_op	r10, rdx,xmm2, 6 + 8, 1
@@ -88,7 +95,8 @@ lps:
 	lps_op	r10, rdx,xmm9,  6 + 8, 3
 	lps_op	r10, rdx,xmm10, 6 + 0, 6
 	lps_op	r10, rdx,xmm10, 6 + 8, 7
-	mov	[rbp]+48, r10
+	#mov	[rbp]+48, r10
+	vpinsrq	xmm1, xmm1, r10, 0
 	
 	lps_op	r11, rdx,xmm2, 7    , 0, mov
 	lps_op	r11, rdx,xmm2, 7 + 8, 1
@@ -99,11 +107,10 @@ lps:
 	lps_op	r11, rdx,xmm9,  7 + 8, 3
 	lps_op	r11, rdx,xmm10, 7 + 0, 6
 	lps_op	r11, rdx,xmm10, 7 + 8, 7	
-	mov [rbp]+56, r11
-	
-	vmovdqa	ymm0, [rbp]
-	vmovdqa	ymm1, [rbp+32]
+	#mov [rbp]+56, r11
+	vpinsrq	xmm1, xmm1, r11, 1
+	vperm2f128   ymm1, ymm7, ymm1, 16
+	#vmovdqa	ymm0, [rbp]
+	#vmovdqa	ymm1, [rbp+32]
 	
 	ret
-
-	
