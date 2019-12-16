@@ -1,5 +1,5 @@
 #define __GOST3411_HAS_AVX__
-#define _DEBUG
+#define _DEBUG 1
 
 
 #if defined _MSC_VER

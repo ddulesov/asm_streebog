@@ -1,9 +1,7 @@
 OBJS  := util.o core.o
 SRC   := util.c core.c
-CFLAGS := -O2 -g -fPIC -DASM_STREEBOG -no-pie -mavx -mavx2
-
-
-
+#-ggdb 
+CFLAGS := -O2 -fPIC -DASM_STREEBOG=1 -no-pie -mavx -mavx2 -masm=intel
 
 all: streebog.o util.o core.o
 	
@@ -12,7 +10,7 @@ all: streebog.o util.o core.o
 	gcc -no-pie -lc -fPIC util.o streebog.o core.o  -o streebog 
 	
 
-streebog.o:  streebog.s add.s const.s debug.s
+streebog.o:  streebog.s add.s const.s debug.s lps.s
 	$(CC) $(CFLAGS)  -c streebog.s -o streebog.o
 	
 $(OBJ): $(SRC) Makefile

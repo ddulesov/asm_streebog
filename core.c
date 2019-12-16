@@ -5,33 +5,6 @@
 #include <stdio.h>
 #endif
 
-#ifdef ASM_STREEBOG
-
-extern void
-stage3(GOST34112012Context *CTX);
-
-void
-stage2(GOST34112012Context *CTX, const unsigned char *data);
-
-
-#else
-void
-stage3(GOST34112012Context *CTX){
-	printf("stage 3 (c)\n");
-}
-
-void
-stage2(GOST34112012Context *CTX, const unsigned char *data){
-	
-}
-
-#endif
-
-void
-GOST34112012Cleanup(GOST34112012Context *CTX)
-{
-    memset(CTX, 0x00, sizeof (GOST34112012Context));
-}
 
 #ifdef _DEBUG
 static void print_hex(const unsigned char* ptr, int ptr_len){
@@ -54,6 +27,28 @@ GOST34112012Dump(GOST34112012Context *CTX)
     printf("\nbuff :"); print_hex(CTX_FIELD(CTX,buffer), CTX->bufsize); printf(" (%i) bytes\n", CTX->bufsize );
 }
 #endif
+
+
+
+#ifndef ASM_STREEBOG
+
+void
+stage3(GOST34112012Context *CTX){
+	printf("stage 3 (c)\n");
+}
+
+void
+stage2(GOST34112012Context *CTX, const unsigned char *data){
+	
+}
+
+
+void
+GOST34112012Cleanup(GOST34112012Context *CTX)
+{
+    memset(CTX, 0x00, sizeof (GOST34112012Context));
+}
+
 
 void
 GOST34112012Init(GOST34112012Context *CTX, const unsigned int digest_size)
@@ -121,3 +116,5 @@ GOST34112012Final(GOST34112012Context *CTX, unsigned char *digest)
     else
         memcpy(digest, &(CTX->h.QWORD[0]), 64);
 }
+
+#endif

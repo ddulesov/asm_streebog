@@ -1,11 +1,29 @@
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
+
 #include "core.h"
 
 const char *sep = "\n       ------------------------------------------------------------------------------------------------";
 
-//const char *data = "012345678901234567890123456789012345678901234567890123456789012";
-const char *data = "01234567890123456789012345678901234567890123456789012345678901200000000";
+//const char ALIGNED *data = "012345678901234567890123456789012345678901234567890123456789012";
+
+const char ALIGNED *data = "012345678901234567890123456789012345678901234567890123456789012"
+        "00000000000000000000000000000000000000000000000000000000000000000000"
+        "11111111111111111111111111111111111111111111111111111111111111111111"
+        "22222222222222222222222222222222222222222222222222222222222222222222"
+        "33333333333333333333333333333333333333333333333333333333333333333333"
+        "44444444444444444444444444444444444444444444444444444444444444444444"
+        "55555555555555555555555555555555555555555555555555555555555555555555"
+        "66666666666666666666666666666666666666666666666666666666666666666666"
+        "77777777777777777777777777777777777777777777777777777777777777777777"
+        "88888888888888888888888888888888888888888888888888888888888888888888"
+        "99999999999999999999999999999999999999999999999999999999999999999999"
+        "00000000000000000000000000000000000000000000000000000000000000000000";
+
+		
+		
+//const char *data = "01234567890123456789012345678901234567890123456789012345678901200000000";
 static  unsigned char digest[64];
 
 void print_buffer(const unsigned char* ptr, int ptr_len){
@@ -52,18 +70,43 @@ void print_ymm(const unsigned char *ptr){
 
 extern void _test();
 extern int  init(GOST34112012Context *CTX, const unsigned int digest_size);
+const int MAX = 1000000;
 
 
 int main(){
 	int len = strlen( data );
 	
-	_test();
+	/*
+	__asm(
+	"xor		rcx, rcx;"
+	"dec		ecx;"
+"_test_1:	"
+	"vpxor	xmm0, xmm0, xmm9;"
+	"vpxor	xmm1, xmm1, xmm9;"
+	"dec     rcx;"
+	"jne	_test_1;"
+		
+	);
+	*/
+	//_test();
+	//return 0;
 	
 	GOST34112012Context ctx;	
-	GOST34112012Init(&ctx, 64 );
+	clock_t t; 
+    t = clock();
 	
-	GOST34112012Update(&ctx, data, len );
-	GOST34112012Final(&ctx, &digest[0]);
+	GOST34112012Init(&ctx, 64 );
+	for(int i=0;i<MAX;i++){
+		GOST34112012Update(&ctx, data, len );
+		GOST34112012Final(&ctx, &digest[0]);
+		GOST34112012Cleanup( &ctx );		
+	}
+	
+	t = clock() - t; 
+    double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds 
+	double perf =  len * (double) MAX / 1000 / 1000 * CLOCKS_PER_SEC /  (double)t;
+	
+	printf("took %f seconds , %f Mbps \n", time_taken, perf);
 	
 	/*
 	ctx.h.QWORD[0] = 0x0102030405060708ULL;
@@ -81,6 +124,6 @@ int main(){
     GOST34112012Dump(&ctx);
 	*/
 	print_digest();
-	GOST34112012Cleanup( &ctx );
+	
  	return 0;
 }

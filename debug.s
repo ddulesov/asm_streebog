@@ -107,6 +107,75 @@ _test:
 	lea		rdi, printf_i[rip]
 	call	printf
 	
+	mov		rcx, 0xFFFFFFFF
+	vmovdqa	ymm9, AXC[rip]
+	vmovdqa	ymm1, AXC[rip]+32
+_test_1:	
+	
+	vpxor	ymm0, ymm0, ymm9
+	vpxor	ymm1, ymm1, ymm9
+	vperm2f128 ymm1, ymm9, ymm9, 1
+
+	vpxor	ymm1, ymm1, ymm9
+	vpxor	ymm0, ymm0, ymm9
+	vperm2f128 ymm0, ymm9, ymm9, 1
+	
+	vpxor	ymm2, ymm2, ymm9
+	vpxor	ymm3, ymm3, ymm9
+	vperm2f128 ymm3, ymm9, ymm9, 1
+
+	vpxor	ymm0, ymm0, ymm9
+	vpxor	ymm1, ymm1, ymm9
+	vperm2f128 ymm1, ymm9, ymm9, 1
+	
+	vpxor	ymm0, ymm0, ymm9
+	vpxor	ymm1, ymm1, ymm9
+	vperm2f128 ymm1, ymm9, ymm9, 1
+
+	vpxor	ymm1, ymm1, ymm9
+	vpxor	ymm0, ymm0, ymm9
+	vperm2f128 ymm0, ymm9, ymm9, 1
+	
+	vpxor	ymm2, ymm2, ymm9
+	vpxor	ymm3, ymm3, ymm9
+	vperm2f128 ymm3, ymm9, ymm9, 1
+
+	vpxor	ymm0, ymm0, ymm9
+	vpxor	ymm1, ymm1, ymm9
+	vperm2f128 ymm1, ymm9, ymm9, 1
+
+
+	vpxor	ymm0, ymm0, ymm9
+	vpxor	ymm1, ymm1, ymm9
+	vperm2f128 ymm1, ymm9, ymm9, 1
+
+	vpxor	ymm1, ymm1, ymm9
+	vpxor	ymm0, ymm0, ymm9
+	vperm2f128 ymm0, ymm9, ymm9, 1
+	
+	vpxor	ymm2, ymm2, ymm9
+	vpxor	ymm3, ymm3, ymm9
+	vperm2f128 ymm3, ymm9, ymm9, 1
+
+	vpxor	ymm0, ymm0, ymm9
+	vpxor	ymm1, ymm1, ymm9
+	vperm2f128 ymm1, ymm9, ymm9, 1	
+	
+	vpxor	ymm0, ymm0, ymm9
+	vpxor	ymm1, ymm1, ymm9
+	vperm2f128 ymm1, ymm9, ymm9, 1
+
+	vpxor	ymm1, ymm1, ymm9
+	vpxor	ymm0, ymm0, ymm9
+	vperm2f128 ymm0, ymm9, ymm9, 1
+	
+	
+	dec     rcx
+
+
+	
+	jne	_test_1
+	
 	add 	rsp, 8
 	ret
 	

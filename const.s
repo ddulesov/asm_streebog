@@ -30,8 +30,7 @@ AXC:
     .quad  0x6e417bd7a2e9320b
     .quad  0x665c8167a437daab
     .quad  0x7666681aa89617f6
-    .quad  0x4b959163700bdcf5
-AXC_SIZE = .- AXC		
+    .quad  0x4b959163700bdcf5		
     .quad  0xf14be6b78df36248
     .quad  0xc585bd689a625cff
     .quad  0x9557d7fca67d82cb
@@ -280,6 +279,8 @@ AXC_SIZE = .- AXC
     .quad  0x93971a882aabccb3
     .quad  0x88d0e17f66bfce72
     .quad  0x27945a985d5bd4d6
+	
+AXC_SIZE = .- AXC	
     .quad  0xde553f8c05a811c8
     .quad  0x1906b59631b4f565
     .quad  0x436e70d6b1964ff7
