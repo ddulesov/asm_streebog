@@ -120,6 +120,8 @@ GOST34112012Update:
 	
 	.p2align 3,,10
 stage_loop:	
+	PREFETCHNTA 	    [rbx+64]
+	#PREFETCHNTA 	    [rbx+128]
 	#call	stage2
 	#stage2
 	
@@ -304,8 +306,6 @@ n_buff:
 	
 	.ifdef _DEBUG	
 		
-		
-		
 		push	rdx
 		mov		rdi, rdx #restore rdi - context
 		
@@ -326,10 +326,8 @@ n_buff:
 		lea		rdi, [rdi + sh_Sigma]
 		call 	_print_buffer
 		
-		
 		pop		rdi
 	.endif
-	
 	
 	mov		rdi, rdx #restore rdi - context
 	
@@ -384,7 +382,6 @@ stage3_exit:
 #------------------ g_func  ---------------------------- 
 	.p2align 4,,15
 g_func:
-	
 	push	rsi
 	push	rbp
 	push	rbx
@@ -412,20 +409,19 @@ g_func:
 	vpxor 	ymm3,  ymm3, ymm1
 	
 	lea		rax, AXC[rip]
-	call	lps #Y1 -> Y0
+	lps_macro
+	#call	lps #Y1 -> Y0
 	
 	#load data ->Y2 TODO . load using xmm
 	#TODO use vmovntdqa  ymm, m256
 	vmovdqu ymm4, ymmword ptr [rsi]
 	vmovdqu ymm5, ymmword ptr [rsi+32]
-	#TODO xor with ymm6,7 in advance
-	#vmovdqa	ymm8, ymm4
-	#vmovdqa	ymm9, ymm5
+
 	vpxor 	ymm6,  ymm6, ymm4
 	vpxor 	ymm7,  ymm7, ymm5
 	
-	mov 	rcx, 12
 	lea		rsi, CXC[rip] # rsi - cx[i]
+	mov		rcx, 12
 	
 	.p2align 3,,
 g_func_loop:
@@ -433,7 +429,6 @@ g_func_loop:
 	vpxor 	ymm2,  ymm4, ymm0
 	vpxor 	ymm3,  ymm5, ymm1
 	
-	prefetcht0	  byte ptr   [rsi + 64]
 	#load CX[i] -> Y2
 	vmovdqa ymm4, ymmword ptr [rsi]
 	vmovdqa ymm5, ymmword ptr [rsi+32]
@@ -442,31 +437,24 @@ g_func_loop:
 	vpxor 	ymm4,  ymm4, ymm0
 	vpxor 	ymm5,  ymm5, ymm1
 	
-	#Y1 -> Y0
-	call	lps
-	#Y2 -> Y1
-	vmovdqa	ymm2, ymm4
-	vmovdqa	ymm3, ymm5
-	#Y0 -> Y2
-	vmovdqa	ymm4, ymm0
-	vmovdqa	ymm5, ymm1	
-	#Y1 -> Y0
-	call	lps
+	#Y2 -> Y0
+	#call	lps
+	lps_macro  mm4, mm5, mm0, mm1
+	
+	#Y1 -> Y2
+	#call	lps
+	lps_macro  mm2, mm3, mm4, mm5
 	
 	add		rsi, CXC_SIZE
-	loop	g_func_loop
+	dec		rcx
+	jne		g_func_loop
 	
 	#end of loop. Y0 xor Y2 -> Y0
-	vpxor 	ymm0,  ymm4, ymm0
-	vpxor 	ymm1,  ymm5, ymm1	
-	#vmovdqu ymm4, YMMWORD [rdi]
-	#vmovdqu ymm5, YMMWORD [rdi+32]
+	vpxor 	ymm0,  ymm0, ymm4
+	vpxor 	ymm1,  ymm1, ymm5		
+	vpxor 	ymm0,  ymm0, ymm6
+	vpxor 	ymm1,  ymm1, ymm7
 	
-	#vpxor 	ymm0,  ymm8, ymm0
-	#vpxor 	ymm1,  ymm9, ymm1
-	
-	vpxor 	ymm0,  ymm6, ymm0
-	vpxor 	ymm1,  ymm7, ymm1	
 g_func_exit:
 	mov		rsp, rbp
 	pop		rdx

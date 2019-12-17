@@ -19,7 +19,8 @@ CXC_SIZE = .- CXC
 	.quad 0x74b4c7fb98459ced, 	 0x3698fad1153bb6c3, 	 0x7a1e6c303b7652f4, 	 0x9fe76702af69334b, 	 0x1fffe18a1b336103, 	 0x8941e71cff8a78db, 	 0x382ae548b2e4f3f3, 	 0xabbedea680056f52
 	.quad 0x6bcaa4cd81f32d1b, 	 0xdea2594ac06fd85d, 	 0xefbacd1d7d476e98, 	 0x8a1d71efea48b9ca, 	 0x2001802114846679, 	 0xd8fa6bbbebab0761, 	 0x3002c6cd635afe94, 	 0x7bcd9ed0efc889fb
 	.quad 0x48bc924af11bd720, 	 0xfaf417d5d9b21b99, 	 0xe71da4aa88e12852, 	 0x5d80ef9d1891cc86, 	 0xf82012d430219f9b, 	 0xcda43c32bcdf1d77, 	 0xd21380b00449b17a, 	 0x378ee767f11631ba
-
+CXC_LEN = .- CXC
+	
 	.type	AXC, @object
 	.p2align 5,0,	
 AXC:
