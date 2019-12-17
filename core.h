@@ -1,6 +1,10 @@
 #define __GOST3411_HAS_AVX__
 #define _DEBUG 1
 
+#pragma once
+#ifndef _CORE_H
+#define _CORE_H
+
 
 #if defined _MSC_VER
 	#define ALIGN(x) __declspec(align(x))
@@ -46,3 +50,6 @@ void GOST34112012Final(GOST34112012Context *CTX, unsigned char *digest);
 void GOST34112012Cleanup(GOST34112012Context *CTX);
 
 void add_bytes(unsigned char* dst, const unsigned char* src);
+
+void print_buffer(const unsigned char* ptr, int ptr_len);
+#endif
