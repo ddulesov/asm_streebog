@@ -42,7 +42,7 @@
 	
 .endm
 
-.macro add_bytes512_macro  dst=rdi, val=r10
+.macro add_bytes512_macro  val=r10, dst=rdi
 	
 	xor		r9, r9
 	add 	qword ptr [\dst + 0], \val
