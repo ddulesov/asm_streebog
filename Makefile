@@ -25,14 +25,14 @@ $(OBJDIR)/%.o : %.c
 $(OBJDIR)/streebog.o:  streebog.s add.s const.s debug.s lps.s
 	$(CC) $(CFLAGS)  -c streebog.s -o $(OBJDIR)/streebog.o
 	
-	
 clean:
 	rm $(OBJDIR)/streebog.o 
 	rm $(OBJ)
 	rm ./build/*
 	
 gdb:
-	gdb --args ./build/asm_streebog -b
+	gdb --args ./build/asm_streebog
+	#gdb --args ./build/asm_streebog -b
 
 
 
