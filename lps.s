@@ -6,108 +6,51 @@
 	
 .endm
 
+.macro lps_op2 acr , xr, i, ai1, ai2, op=xor
+	vpextrb		ebx, \xr, \i
+	vpextrb		edx, \xr, \i + 8
+	\op			\acr, [rax + rbx * 8]  + AXC_SIZE * \ai1
+	xor			\acr, [rax + rdx * 8]  + AXC_SIZE * \ai2
+	
+.endm
+
+.macro lps_op3 acr, i, x1, x2, x3, x4 
+	lps_op2 \acr,  \x1,  \i,    0,1, mov
+	lps_op2 \acr,  \x2,  \i,    4,5
+	lps_op2 \acr,  \x3,  \i,    2,3
+	lps_op2 \acr,  \x4,  \i,    6,7
+.endm
 #-------------------------------------	
 	.p2align 4,,15
 .macro lps_macro src1=mm2, src2=mm3, dst1=mm0, dst2=mm1
 	
 	VEXTRACTI128  x\dst1, y\src1, 1
 	VEXTRACTI128  x\dst2, y\src2, 1
-	#0
-	lps_op	r8,  bx, x\src1, 0	  , 0, mov
-	lps_op	r8,  bx, x\src1, 0 + 8, 1
-	lps_op	r8,  bx, x\src2, 0 + 0, 4
-	lps_op	r8,  bx, x\src2, 0 + 8, 5
 	
-	lps_op	r8,  bx, x\dst1, 0	  , 2
-	lps_op	r8,  bx, x\dst1, 0 + 8, 3
-	lps_op	r8,  bx, x\dst2, 0 + 0, 6
-	lps_op	r8,  bx, x\dst2, 0 + 8, 7
-	
+	lps_op3 r8, 0, x\src1, x\src2, x\dst1, x\dst2
 	mov	[rsp]+0  , r8
-	#1
-	lps_op	r9,  bx, x\src1, 1    , 0, mov
-	lps_op	r9,  bx, x\src1, 1 + 8, 1
-	lps_op	r9,  bx, x\src2, 1 + 0, 4
-	lps_op	r9,  bx, x\src2, 1 + 8, 5
-	
-	lps_op	r9,  bx, x\dst1, 1	  , 2 
-	lps_op	r9,  bx, x\dst1, 1 + 8, 3
-	lps_op	r9,  bx, x\dst2, 1 + 0, 6
-	lps_op	r9,  bx, x\dst2, 1 + 8, 7
-	
-	mov [rsp]+8 , r9
-	#2
-	lps_op	r10, bx, x\src1, 2	  , 0, mov
-	lps_op	r10, bx, x\src1, 2 + 8, 1
-	lps_op	r10, bx, x\src2, 2 + 0, 4
-	lps_op	r10, bx, x\src2, 2 + 8, 5
-	
-	lps_op	r10, bx, x\dst1, 2	  , 2 
-	lps_op	r10, bx, x\dst1, 2 + 8, 3
-	lps_op	r10, bx, x\dst2, 2 + 0, 6
-	lps_op	r10, bx, x\dst2, 2 + 8, 7
-	
-	mov	[rsp]+16, r10
-	#3
-	lps_op	r11, bx, x\src1, 3	  , 0, mov
-	lps_op	r11, bx, x\src1, 3 + 8, 1
-	lps_op	r11, bx, x\src2, 3 + 0, 4
-	lps_op	r11, bx, x\src2, 3 + 8, 5
-	
-	lps_op	r11, bx, x\dst1, 3    , 2 
-	lps_op	r11, bx, x\dst1, 3 + 8, 3
-	lps_op	r11, bx, x\dst2, 3 + 0, 6
-	lps_op	r11, bx, x\dst2, 3 + 8, 7
-	
-	mov [rsp]+24, r11
-	
-	#4
-	lps_op	r8,  bx, x\src1, 4	  , 0, mov
-	lps_op	r8,  bx, x\src1, 4 + 8, 1
-	lps_op	r8,  bx, x\src2, 4 + 0, 4
-	lps_op	r8,  bx, x\src2, 4 + 8, 5
-	
-	lps_op	r8,  bx, x\dst1, 4	  , 2 
-	lps_op	r8,  bx, x\dst1, 4 + 8, 3
-	lps_op	r8,  bx, x\dst2, 4 + 0, 6
-	lps_op	r8,  bx, x\dst2, 4 + 8, 7
-	
-	mov	[rsp]+32 , r8
-	#5
-	lps_op	r9,  bx, x\src1, 5    , 0, mov
-	lps_op	r9,  bx, x\src1, 5 + 8, 1
-	lps_op	r9,  bx, x\src2, 5 + 0, 4
-	lps_op	r9,  bx, x\src2, 5 + 8, 5
-	
-	lps_op	r9,  bx, x\dst1, 5    , 2 
-	lps_op	r9,  bx, x\dst1, 5 + 8, 3
-	lps_op	r9,  bx, x\dst2, 5 + 0, 6
-	lps_op	r9,  bx, x\dst2, 5 + 8, 7
-	
-	mov [rsp]+40 , r9
-	#6
-	lps_op	r10, bx, x\src1, 6    , 0, mov
-	lps_op	r10, bx, x\src1, 6 + 8, 1
-	lps_op	r10, bx, x\src2, 6 + 0, 4
-	lps_op	r10, bx, x\src2, 6 + 8, 5
-	
-	lps_op	r10, bx, x\dst1, 6    , 2
-	lps_op	r10, bx, x\dst1, 6 + 8, 3
-	lps_op	r10, bx, x\dst2, 6 + 0, 6
-	lps_op	r10, bx, x\dst2, 6 + 8, 7
-	
-	mov	[rsp]+48, r10
-	#7
-	lps_op	r11, bx, x\src1, 7    , 0, mov
-	lps_op	r11, bx, x\src1, 7 + 8, 1
-	lps_op	r11, bx, x\src2, 7 + 0, 4
-	lps_op	r11, bx, x\src2, 7 + 8, 5
 
-	lps_op	r11, bx, x\dst1, 7    , 2
-	lps_op	r11, bx, x\dst1, 7 + 8, 3
-	lps_op	r11, bx, x\dst2, 7 + 0, 6
-	lps_op	r11, bx, x\dst2, 7 + 8, 7
+	#1
+	lps_op3 r9, 1, x\src1, x\src2, x\dst1, x\dst2
+	mov [rsp]+8 , r9
+
+	#2
+	lps_op3 r10, 2, x\src1, x\src2, x\dst1, x\dst2
+	mov	[rsp]+16, r10
 	
+	lps_op3 r11, 3, x\src1, x\src2, x\dst1, x\dst2
+	mov [rsp]+24, r11
+
+	lps_op3 r8, 4, x\src1, x\src2, x\dst1, x\dst2
+	mov	[rsp]+32 , r8
+	
+	lps_op3 r9, 5, x\src1, x\src2, x\dst1, x\dst2
+	mov [rsp]+40 , r9
+	
+	lps_op3 r10, 6, x\src1, x\src2, x\dst1, x\dst2
+	mov	[rsp]+48, r10
+
+	lps_op3 r11, 7, x\src1, x\src2, x\dst1, x\dst2
 	mov [rsp]+56, r11
 	
 	vmovdqa	y\dst1, [rsp]
