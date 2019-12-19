@@ -297,6 +297,7 @@ g_func:
 	
 	.p2align 3,,
 g_func_loop:
+	prefetchnta ymmword ptr [rsi+64]
 	# Y2 xor Y0 -> Y1  ( D xor key)
 	vpxor 	ymm2,  ymm4, ymm0
 	vpxor 	ymm3,  ymm5, ymm1
