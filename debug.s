@@ -70,32 +70,7 @@
 .extern  printf
 .extern  puts
 
-	.p2align 4,,15
-_test:
-	sub		rsp, 8
 
-	lea		rax, AXC[rip]
-	
-	vpxor	ymm0, ymm0, ymm0
-	vpxor	ymm1, ymm1, ymm1
-	
-	vmovdqa	ymm9, [rax]
-
-	vperm2f128 ymm1, ymm9, ymm9, 1
-	vpblendd   ymm2, ymm9, ymm1, 15
-	
-	#vmovdqa XMMWORD PTR [rdi], xmm9
-	#vmovdqa XMMWORD PTR [rdi]+16, xmm1
-	#vmovdqa YMMWORD PTR [rdi], ymm0
-	#vmovdqa YMMWORD PTR [rdi+32], ymm9
-	
-	
-	call	_print_ymm
-	
-
-
-	add 	rsp, 8
-	ret
 	
 	.p2align 4,,15
 _save_ymm:
@@ -153,11 +128,8 @@ _print_buffer:
 	
 	.p2align 4,,15
 _print_contex:
-	
 	ymm_prolog
-	
 	call	GOST34112012Dump
-	
 	ymm_epilog
 	ret
 

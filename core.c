@@ -198,11 +198,9 @@ GOST34112012Init(GOST34112012Context *CTX, const unsigned int digest_size)
     unsigned int i;
     memset(CTX, 0x00, sizeof(GOST34112012Context));
     CTX->digest_size = digest_size;
-	if (digest_size == 256) {
-		for (i = 0; i < 8; i++)
-		{
-			CTX->h.QWORD[i] = 0x0101010101010101ULL;
-		}
+	if (digest_size == 32) {
+		memset(&(CTX->h), 0x01, 64 );
+
 	}
 #ifdef _DEBUG
 	strncpy (&(CTX->name[0]), "GOST34112012Context", 63);
@@ -243,8 +241,9 @@ GOST34112012Update(GOST34112012Context *CTX, const unsigned char *data, size_t l
 
     if (len) {
         memcpy(&CTX->buffer, data, len);
-        CTX->bufsize = len;
+        
     }
+	CTX->bufsize = len;
 }
 
 void

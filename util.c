@@ -7,8 +7,8 @@
 
 const char *sep = "\n       ------------------------------------------------------------------------------------------------";
 
-const char ALIGNED *data_test = "012345678901234567890123456789012345678901234567890123456789012";
-const unsigned char hash_test[]=
+const char *data_test1 = "012345678901234567890123456789012345678901234567890123456789012";
+const unsigned char hash_test1[]=
 {
 	0x1b,0x54,0xd0,0x1a,0x4a,0xf5,0xb9,0xd5,
 	0xcc,0x3d,0x86,0xd6,0x8d,0x28,0x54,0x62,
@@ -20,9 +20,46 @@ const unsigned char hash_test[]=
 	0x41,0x79,0x78,0x91,0xc1,0x64,0x6f,0x48
 };
 
+const unsigned char hash_test1_32[]=
+{
+	0x9d,0x15,0x1e,0xef,0xd8,0x59,0x0b,0x89,
+	0xda,0xa6,0xba,0x6c,0xb7,0x4a,0xf9,0x27,
+	0x5d,0xd0,0x51,0x02,0x6b,0xb1,0x49,0xa4,
+	0x52,0xfd,0x84,0xe5,0xe5,0x7b,0x55,0x00,
+};
+
+const unsigned char data_test2[]= {
+	0xd0,0xcf,0x11,0xe0,0xa1,0xb1,0x1a,0xe1,
+	0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+	0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+	0x3e,0x00,0x03,0x00,0xfe,0xff,0x09,0x00,
+	0x06,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+	0x00,0x00,0x00,0x00,0x01,0x00,0x00,0x00,
+	0x01,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+	0x00,0x10,0x00,0x00,0x24,0x00,0x00,0x00,
+	0x01,0x00,0x00,0x00,0xfe,0xff,0xff,0xff,
+	0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+	0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,
+	0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff
+};
+
+
+const unsigned char hash_test2[]={
+	0xc7,0x66,0x08,0x55,0x40,0xca,0xaa,0x89,
+	0x53,0xbf,0xcf,0x7a,0x1b,0xa2,0x20,0x61,
+	0x9c,0xee,0x50,0xd6,0x5d,0xc2,0x42,0xf8,
+	0x2f,0x23,0xba,0x4b,0x18,0x0b,0x18,0xe0
+};
+
 #define min(a,b)	( (a<b)?a:b )
 
-const char ALIGNED *data = "012345678901234567890123456789012345678901234567890123456789012"
+const char *data = "012345678901234567890123456789012345678901234567890123456789012"
         "00000000000000000000000000000000000000000000000000000000000000000000"
         "11111111111111111111111111111111111111111111111111111111111111111111"
         "22222222222222222222222222222222222222222222222222222222222222222222"
@@ -114,12 +151,17 @@ int benchmark(){
 	struct timespec mt1, mt2; 
 	long int tt; 
 	
-	int len = strlen( data );
+	unsigned char block[8192];
+	
+	int len = sizeof(block);
+	for (int i = 0; i < len; i++)
+        block[i] = (unsigned char) (i & 0xff);
+	
 	clock_gettime (CLOCK_REALTIME, &mt1);
 	
 	GOST34112012Init(&ctx, 64 );
 	for(int i=0;i<MAX;i++){
-		GOST34112012Update(&ctx, data, len );
+		GOST34112012Update(&ctx, block, len );
 		GOST34112012Final(&ctx, &digest[0]);
 		GOST34112012Cleanup( &ctx );		
 	}
@@ -129,7 +171,7 @@ int benchmark(){
 	
 	double perf =  len * (double) MAX * 1000 / tt;
 	
-	printf("took %.1f seconds , %.2f Mbps \n", (double)tt * 1e-9, perf);
+	printf("took %.1f seconds , 512 bit hash speed : %.2f Mbps \n", (double)tt * 1e-9, perf);
 	return 0;
 }
 
@@ -143,28 +185,56 @@ int i1(){
 	GOST34112012Cleanup( &ctx );
 	
 	print_digest();
-	
 	return 0;
 }
 
 
 int test(){
 	GOST34112012Context ctx;	
-	int len = strlen( data_test );
+	int len = strlen( data_test1 );
 	
 	GOST34112012Init( &ctx, 64 );
-	GOST34112012Update( &ctx, data_test, len );
+	GOST34112012Update( &ctx, data_test1, len );
 	GOST34112012Final( &ctx, &digest[0] );
 	GOST34112012Cleanup( &ctx );
 	
 	print_digest();
-	if(memcmp(&digest[0], hash_test, 64 )!= 0 ){
+	if(memcmp(&digest[0], hash_test1, 64 )!= 0 ){
 		puts("ERROR");
 		
-		print_buffer(hash_test, 64);
+		print_buffer(hash_test1, 64);
+		return 1;
+	}
+	// 32 bit hash
+	len = strlen( data_test1 );
+	
+	GOST34112012Init( &ctx, 32 );
+	GOST34112012Update( &ctx, data_test1, len );
+	GOST34112012Final( &ctx, &digest[0] );
+	GOST34112012Cleanup( &ctx );
+	print_digest();
+	if(memcmp(&digest[0], hash_test1_32, 32 )!= 0 ){
+		puts("ERROR");
+		
+		print_buffer(hash_test1_32, 32);
 		return 1;
 	}
 	
+	//32 bit on the troublesome data https://habr.com/ru/post/450024/
+	len = sizeof( data_test2 );
+	
+	GOST34112012Init( &ctx, 32 );
+	GOST34112012Update( &ctx, data_test2, len );
+	GOST34112012Final( &ctx, &digest[0] );
+	GOST34112012Cleanup( &ctx );
+	print_digest();
+	if(memcmp(&digest[0], hash_test2, 32 )!= 0 ){
+		puts("ERROR");
+		
+		print_buffer(hash_test2, 32);
+		return 1;
+	}
+	//split long data on chunks
 	len = strlen( data );
 	
 	GOST34112012Init( &ctx, 64 );
@@ -190,7 +260,6 @@ int test(){
 			return 1;
 		}
 	}
-		
 	puts("OK");
 	return 0;
 }
@@ -199,8 +268,6 @@ int test(){
 int main(int argc, const char* argv[]){
 	//_test();
 	//return 0;
-	
-
 	if(argc>1 && strcmp(argv[1], "-b")==0 ){
 		return benchmark();
 	}else if( argc>1 && strcmp(argv[1], "-i1")==0  ){

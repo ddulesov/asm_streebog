@@ -10,7 +10,7 @@
 	
 .section .text
 
-.global _test
+
 .global GOST34112012Final
 .global GOST34112012Update
 .global GOST34112012Init
@@ -159,7 +159,6 @@ exit_update:
 #---finalization---
 	.p2align 4,,15
 GOST34112012Final:
-
 	push	rbx
 	push	rdx
 	push	rsi
@@ -225,8 +224,8 @@ GOST34112012Final:
 	
 	#self.h.g(&BUFFER0, self.sigma.as_ptr());
 	#zerro buffer
-	vpxor 	ymm2,  ymm2, ymm2
-	vpxor 	ymm3,  ymm3, ymm3
+	vpxor 	ymm2, ymm2, ymm2
+	vpxor 	ymm3, ymm3, ymm3
 	lea		rsi, [rdi + sh_Sigma]
 	call	g_func
 	
@@ -270,7 +269,7 @@ g_func:
 	#reserv 64 byte for lps. beware all subsequents calls must not allocate stack
 	#or should be done before lps call
 	mov		rbp, rsp
-	sub 	rsp, 128 #reserv buffer and return address (calling lps)
+	sub 	rsp, 64 #reserv buffer and return address (calling lps)
 	and		rsp, -32 #AVX require 32-bit aligned stack 
 		
 	#copy  h -> Y3
