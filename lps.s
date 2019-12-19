@@ -1,116 +1,116 @@
 .intel_syntax noprefix
 
 .macro lps_op acr, ir, xr, i, ai, op=xor
-	vpextrb		\ir, \xr, \i
-	\op			\acr, [rax + \ir*8] + AXC_SIZE * \ai
+	vpextrb		e\ir, \xr, \i
+	\op			\acr, [rax + r\ir * 8]  + AXC_SIZE * \ai
 	
 .endm
+
 #-------------------------------------	
 	.p2align 4,,15
-	#should not use rcx, rdi, rsi!
-lps:
-	vperm2f128 ymm9, ymm2, ymm2, 1
-	vperm2f128 ymm10, ymm3, ymm3, 1
+.macro lps_macro src1=mm2, src2=mm3, dst1=mm0, dst2=mm1
 	
-	lps_op	r8,  rdx,xmm2, 0    , 0, mov
-	lps_op	r8,  rdx,xmm2, 0 + 8, 1
-	lps_op	r8,  rdx,xmm3, 0 + 0, 4
-	lps_op	r8,  rdx,xmm3, 0 + 8, 5
+	VEXTRACTI128  x\dst1, y\src1, 1
+	VEXTRACTI128  x\dst2, y\src2, 1
+	#0
+	lps_op	r8,  bx, x\src1, 0	  , 0, mov
+	lps_op	r8,  bx, x\src1, 0 + 8, 1
+	lps_op	r8,  bx, x\src2, 0 + 0, 4
+	lps_op	r8,  bx, x\src2, 0 + 8, 5
 	
-	lps_op	r8,  rdx,xmm9,  0    , 2 
-	lps_op	r8,  rdx,xmm9,  0 + 8, 3
-	lps_op	r8,  rdx,xmm10, 0 + 0, 6
-	lps_op	r8,  rdx,xmm10, 0 + 8, 7
-	#mov	[rbp]   , r8
-	vpinsrq	xmm0, xmm0, r8, 0
+	lps_op	r8,  bx, x\dst1, 0	  , 2
+	lps_op	r8,  bx, x\dst1, 0 + 8, 3
+	lps_op	r8,  bx, x\dst2, 0 + 0, 6
+	lps_op	r8,  bx, x\dst2, 0 + 8, 7
 	
-	lps_op	r9,  rdx,xmm2, 1    , 0,   mov
-	lps_op	r9,  rdx,xmm2, 1 + 8, 1
-	lps_op	r9,  rdx,xmm3, 1 + 0, 4
-	lps_op	r9,  rdx,xmm3, 1 + 8, 5
+	mov	[rsp]+0  , r8
+	#1
+	lps_op	r9,  bx, x\src1, 1    , 0, mov
+	lps_op	r9,  bx, x\src1, 1 + 8, 1
+	lps_op	r9,  bx, x\src2, 1 + 0, 4
+	lps_op	r9,  bx, x\src2, 1 + 8, 5
 	
-	lps_op	r9,  rdx,xmm9,  1    , 2 
-	lps_op	r9,  rdx,xmm9,  1 + 8, 3
-	lps_op	r9,  rdx,xmm10, 1 + 0, 6
-	lps_op	r9,  rdx,xmm10, 1 + 8, 7
-	#mov [rbp]+8 , r9
-	vpinsrq	xmm0, xmm0, r9, 1
+	lps_op	r9,  bx, x\dst1, 1	  , 2 
+	lps_op	r9,  bx, x\dst1, 1 + 8, 3
+	lps_op	r9,  bx, x\dst2, 1 + 0, 6
+	lps_op	r9,  bx, x\dst2, 1 + 8, 7
 	
-	lps_op	r10, rdx,xmm2, 2    , 0, mov
-	lps_op	r10, rdx,xmm2, 2 + 8, 1
-	lps_op	r10, rdx,xmm3, 2 + 0, 4
-	lps_op	r10, rdx,xmm3, 2 + 8, 5
+	mov [rsp]+8 , r9
+	#2
+	lps_op	r10, bx, x\src1, 2	  , 0, mov
+	lps_op	r10, bx, x\src1, 2 + 8, 1
+	lps_op	r10, bx, x\src2, 2 + 0, 4
+	lps_op	r10, bx, x\src2, 2 + 8, 5
+	
+	lps_op	r10, bx, x\dst1, 2	  , 2 
+	lps_op	r10, bx, x\dst1, 2 + 8, 3
+	lps_op	r10, bx, x\dst2, 2 + 0, 6
+	lps_op	r10, bx, x\dst2, 2 + 8, 7
+	
+	mov	[rsp]+16, r10
+	#3
+	lps_op	r11, bx, x\src1, 3	  , 0, mov
+	lps_op	r11, bx, x\src1, 3 + 8, 1
+	lps_op	r11, bx, x\src2, 3 + 0, 4
+	lps_op	r11, bx, x\src2, 3 + 8, 5
+	
+	lps_op	r11, bx, x\dst1, 3    , 2 
+	lps_op	r11, bx, x\dst1, 3 + 8, 3
+	lps_op	r11, bx, x\dst2, 3 + 0, 6
+	lps_op	r11, bx, x\dst2, 3 + 8, 7
+	
+	mov [rsp]+24, r11
+	
+	#4
+	lps_op	r8,  bx, x\src1, 4	  , 0, mov
+	lps_op	r8,  bx, x\src1, 4 + 8, 1
+	lps_op	r8,  bx, x\src2, 4 + 0, 4
+	lps_op	r8,  bx, x\src2, 4 + 8, 5
+	
+	lps_op	r8,  bx, x\dst1, 4	  , 2 
+	lps_op	r8,  bx, x\dst1, 4 + 8, 3
+	lps_op	r8,  bx, x\dst2, 4 + 0, 6
+	lps_op	r8,  bx, x\dst2, 4 + 8, 7
+	
+	mov	[rsp]+32 , r8
+	#5
+	lps_op	r9,  bx, x\src1, 5    , 0, mov
+	lps_op	r9,  bx, x\src1, 5 + 8, 1
+	lps_op	r9,  bx, x\src2, 5 + 0, 4
+	lps_op	r9,  bx, x\src2, 5 + 8, 5
+	
+	lps_op	r9,  bx, x\dst1, 5    , 2 
+	lps_op	r9,  bx, x\dst1, 5 + 8, 3
+	lps_op	r9,  bx, x\dst2, 5 + 0, 6
+	lps_op	r9,  bx, x\dst2, 5 + 8, 7
+	
+	mov [rsp]+40 , r9
+	#6
+	lps_op	r10, bx, x\src1, 6    , 0, mov
+	lps_op	r10, bx, x\src1, 6 + 8, 1
+	lps_op	r10, bx, x\src2, 6 + 0, 4
+	lps_op	r10, bx, x\src2, 6 + 8, 5
+	
+	lps_op	r10, bx, x\dst1, 6    , 2
+	lps_op	r10, bx, x\dst1, 6 + 8, 3
+	lps_op	r10, bx, x\dst2, 6 + 0, 6
+	lps_op	r10, bx, x\dst2, 6 + 8, 7
+	
+	mov	[rsp]+48, r10
+	#7
+	lps_op	r11, bx, x\src1, 7    , 0, mov
+	lps_op	r11, bx, x\src1, 7 + 8, 1
+	lps_op	r11, bx, x\src2, 7 + 0, 4
+	lps_op	r11, bx, x\src2, 7 + 8, 5
 
-	lps_op	r10, rdx,xmm9,  2    , 2 
-	lps_op	r10, rdx,xmm9,  2 + 8, 3
-	lps_op	r10, rdx,xmm10, 2 + 0, 6
-	lps_op	r10, rdx,xmm10, 2 + 8, 7
-	#mov	[rbp]+16, r10
-	vpinsrq	xmm1, xmm1, r10, 0
+	lps_op	r11, bx, x\dst1, 7    , 2
+	lps_op	r11, bx, x\dst1, 7 + 8, 3
+	lps_op	r11, bx, x\dst2, 7 + 0, 6
+	lps_op	r11, bx, x\dst2, 7 + 8, 7
 	
-	lps_op	r11, rdx,xmm2, 3    , 0, mov
-	lps_op	r11, rdx,xmm2, 3 + 8, 1
-	lps_op	r11, rdx,xmm3, 3 + 0, 4
-	lps_op	r11, rdx,xmm3, 3 + 8, 5
+	mov [rsp]+56, r11
 	
-	lps_op	r11, rdx,xmm9,  3    , 2 
-	lps_op	r11, rdx,xmm9,  3 + 8, 3
-	lps_op	r11, rdx,xmm10, 3 + 0, 6
-	lps_op	r11, rdx,xmm10, 3 + 8, 7
-	#mov [rbp]+24, r11
-	vpinsrq	xmm1, xmm1, r11, 1
-	vperm2f128   ymm0, ymm0, ymm1, 16
+	vmovdqa	y\dst1, [rsp]
+	vmovdqa	y\dst2, [rsp] + 32
 	
-	# high part ----------------------------
-	lps_op	r8,  rdx,xmm2, 4    , 0, mov
-	lps_op	r8,  rdx,xmm2, 4 + 8, 1
-	lps_op	r8,  rdx,xmm3, 4 + 0, 4
-	lps_op	r8,  rdx,xmm3, 4 + 8, 5
-	
-	lps_op	r8,  rdx,xmm9,  4    , 2, 
-	lps_op	r8,  rdx,xmm9,  4 + 8, 3
-	lps_op	r8,  rdx,xmm10, 4 + 0, 6
-	lps_op	r8,  rdx,xmm10, 4 + 8, 7
-	#mov	[rbp]+32 , r8
-	vpinsrq	xmm7, xmm7, r8, 0
-	
-	lps_op	r9,  rdx,xmm2, 5    , 0, mov
-	lps_op	r9,  rdx,xmm2, 5 + 8, 1
-	lps_op	r9,  rdx,xmm3, 5 + 0, 4
-	lps_op	r9,  rdx,xmm3, 5 + 8, 5
-
-	lps_op	r9,  rdx,xmm9,  5    , 2
-	lps_op	r9,  rdx,xmm9,  5 + 8, 3
-	lps_op	r9,  rdx,xmm10, 5 + 0, 6
-	lps_op	r9,  rdx,xmm10, 5 + 8, 7	
-	#mov [rbp]+40 , r9
-	vpinsrq	xmm7, xmm7, r9, 1
-	
-	lps_op	r10, rdx,xmm2, 6    , 0, mov
-	lps_op	r10, rdx,xmm2, 6 + 8, 1
-	lps_op	r10, rdx,xmm3, 6 + 0, 4
-	lps_op	r10, rdx,xmm3, 6 + 8, 5
-
-	lps_op	r10, rdx,xmm9,  6    , 2
-	lps_op	r10, rdx,xmm9,  6 + 8, 3
-	lps_op	r10, rdx,xmm10, 6 + 0, 6
-	lps_op	r10, rdx,xmm10, 6 + 8, 7
-	#mov	[rbp]+48, r10
-	vpinsrq	xmm1, xmm1, r10, 0
-	
-	lps_op	r11, rdx,xmm2, 7    , 0, mov
-	lps_op	r11, rdx,xmm2, 7 + 8, 1
-	lps_op	r11, rdx,xmm3, 7 + 0, 4
-	lps_op	r11, rdx,xmm3, 7 + 8, 5
-
-	lps_op	r11, rdx,xmm9,  7    , 2
-	lps_op	r11, rdx,xmm9,  7 + 8, 3
-	lps_op	r11, rdx,xmm10, 7 + 0, 6
-	lps_op	r11, rdx,xmm10, 7 + 8, 7	
-	#mov [rbp]+56, r11
-	vpinsrq	xmm1, xmm1, r11, 1
-	vperm2f128   ymm1, ymm7, ymm1, 16
-	#vmovdqa	ymm0, [rbp]
-	#vmovdqa	ymm1, [rbp+32]
-	
-	ret
+.endm

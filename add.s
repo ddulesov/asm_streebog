@@ -6,10 +6,10 @@
 	# .p2align 3,,10
 # loop:		
 	
-	# mov		r8, qword ptr [\src + rcx + 0] 
+	# mov		r10, qword ptr [\src + rcx + 0] 
 	# mov		r9, qword ptr [\src + rcx + 8] 
 	# sahf	#restore cf
-	# adc		qword ptr [\dst + rcx + 0], r8
+	# adc		qword ptr [\dst + rcx + 0], r10
 	# adc		qword ptr [\dst + rcx + 8], r9
 	# lahf	#save cf
 	
@@ -19,30 +19,42 @@
 	# ret
 	
 .macro add_bytes_macro	src=rsi, dst=rdi
-	.p2align 3,,10
+			
+	mov		r10, qword ptr [\src +  0] 
+	mov		r9, qword ptr [\src +   8] 
+	add 	qword ptr [\dst + 0], r10
+	adc		qword ptr [\dst + 8], r9
+
+	mov		r10, qword ptr [\src + 16] 
+	mov		r9, qword ptr [\src + 24] 
+	adc		qword ptr [\dst + 16], r10
+	adc		qword ptr [\dst + 24], r9	
+
+	mov		r10, qword ptr [\src + 32 ]
+	mov		r9, qword ptr [\src + 40] 
+	adc		qword ptr [\dst + 32], r10
+	adc		qword ptr [\dst + 40], r9
+
+	mov		r10, qword ptr [\src + 48] 
+	mov		r9, qword ptr [\src + 56] 
+	adc		qword ptr [\dst +  48], r10
+	adc		qword ptr [\dst +  56], r9
 	
-add_bytes\@:		
-	mov		r8, qword ptr [\src + rcx + 0] 
-	mov		r9, qword ptr [\src + rcx + 8] 
-	add 	qword ptr [\dst + rcx + 0], r8
-	adc		qword ptr [\dst + rcx + 8], r9
+.endm
 
-	mov		r8, qword ptr [\src + rcx + 16] 
-	mov		r9, qword ptr [\src + rcx + 24] 
-	adc		qword ptr [\dst + rcx + 16], r8
-	adc		qword ptr [\dst + rcx + 24], r9	
-
-	mov		r8, qword ptr [\src + rcx + 32 ]
-	mov		r9, qword ptr [\src + rcx + 40] 
-	adc		qword ptr [\dst + rcx + 32], r8
-	adc		qword ptr [\dst + rcx + 40], r9
-
-	mov		r8, qword ptr [\src + rcx + 48] 
-	mov		r9, qword ptr [\src + rcx + 56] 
-	adc		qword ptr [\dst + rcx + 48], r8
-	adc		qword ptr [\dst + rcx + 56], r9
+.macro add_bytes512_macro  val=r10, dst=rdi
 	
-.endm	
+	xor		r9, r9
+	add 	qword ptr [\dst + 0], \val
+	adc		qword ptr [\dst + 8], r9
+	adc		qword ptr [\dst + 16], r9
+	adc		qword ptr [\dst + 24], r9
+	adc		qword ptr [\dst + 32], r9
+	adc		qword ptr [\dst + 40], r9
+	adc		qword ptr [\dst + 48], r9
+	adc		qword ptr [\dst + 56], r9
+	
+.endm
 
 
 	

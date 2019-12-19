@@ -3,15 +3,17 @@
 .macro ymm_prolog
 
 	push	rbp
+	
 	push	rdi
 	push	rsi
 	push	rdx
 	push	rbx
 	push	rcx
+	
 	mov		rbp, rsp
 	
 	sub		rsp, 32 * 10
-	and		rsp, 0xFFFFFFFFFFFFFFE0
+	and		rsp, -32
 	
 	vmovdqa YMMWORD PTR [rsp], ymm0
 	vmovdqa YMMWORD PTR [rsp+32], ymm1
@@ -131,6 +133,7 @@ _print_ymm:
 	ymm_prolog
 	
 	mov		rdi, rsp
+	mov		rsi, rax
 	call	print_ymm
 	
 	ymm_epilog
