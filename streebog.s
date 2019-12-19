@@ -11,12 +11,6 @@
 .section .text
 
 
-.global GOST34112012Final
-.global GOST34112012Update
-.global GOST34112012Init
-.global GOST34112012Cleanup
-.global GOST34112012Hash
-
 sh_bufsize  = 256
 sh_digsize  = 260
 sh_h		= 0
@@ -30,6 +24,13 @@ sh_buffer   = 192
 .type GOST34112012Init   , @function
 .type GOST34112012Cleanup, @function
 .type GOST34112012Hash   , @function
+
+.global GOST34112012Final
+.global GOST34112012Update
+.global GOST34112012Init
+.global GOST34112012Cleanup
+.global GOST34112012Hash
+
 
 #--- cleanup context ---
 	.p2align 4,,15
@@ -170,7 +171,7 @@ GOST34112012Final:
 	vmovdqa ymm0, ymmword ptr [rdi + sh_h + 0 ]
 	vmovdqa ymm1, ymmword ptr [rdi + sh_h + 32 ]
 	
-	mov		rcx, 64
+	mov		rcx, 63
 	sub		rcx, rbx  #self.bufsize < 64 {
 	
 	# the situation with bufsize == 64 is imposible. so, remove this check
@@ -184,7 +185,7 @@ GOST34112012Final:
 	stosb
 	
 	xor		al, al
-	dec		rcx
+	
 	#zero  pad 
 	rep 	stosb	
 	
@@ -296,7 +297,7 @@ g_func:
 	
 	.p2align 3,,
 g_func_loop:
-	prefetchnta ymmword ptr [rsi+64]
+	prefetchnta ymmword ptr [rsi+128]
 	# Y2 xor Y0 -> Y1  ( D xor key)
 	vpxor 	ymm2,  ymm4, ymm0
 	vpxor 	ymm3,  ymm5, ymm1
@@ -318,7 +319,7 @@ g_func_loop:
 	lps_macro  mm2, mm3, mm4, mm5
 	
 	add		rsi, CXC_SIZE
-	dec		rcx
+	sub		rcx, 1
 	jne		g_func_loop
 	
 	#end of loop. Y0 xor Y2 -> Y0

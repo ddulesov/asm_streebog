@@ -5,7 +5,6 @@
 #include <stdio.h>
 #endif
 
-
 #ifdef _DEBUG
 static void print_hex(const unsigned char* ptr, int ptr_len){
 	for(int i=0; i<ptr_len; i++){

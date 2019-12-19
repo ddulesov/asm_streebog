@@ -6,16 +6,20 @@ OBJS = $(addprefix $(OBJDIR)/, $O )
 #-ggdb 
 CFLAGS := -O3 -fPIC -DASM_STREEBOG=1 -no-pie -mavx -mavx2 -masm=intel
 
-
 all: asm_streebog c_streebog v_streebog
 
+dlib:   $(OBJDIR)/streebog.o  
+	gcc -shared -o $(OBJDIR)/libstreebog.so $(OBJDIR)/streebog.o
+
 asm_streebog: $(OBJDIR)/streebog.o $(OBJS)
-	#gcc -c -fPIC -O2 core.c -o core.o
-	#gcc -c -fPIC -O2 util.c -o util.o
-	gcc -no-pie  -lc -fPIC  $(OBJDIR)/streebog.o $(OBJS)  -o ./build/asm_streebog 
+	gcc -no-pie  -s  -lc -fPIC  $(OBJDIR)/streebog.o $(OBJS)  -o ./build/asm_streebog 
+
+asm_streebog_dyn: dlib $(OBJS)
+	gcc -L./build/    $(OBJS) -lstreebog  -o ./build/asm_streebog_dyn 
+
 	
 c_streebog: $(SRC)
-	$(CC) -lc -mavx2 -O3 -fPIC $(SRC)  -o ./build/c_streebog
+	$(CC) -lc -mavx2 -s  -O3 -fPIC $(SRC)  -o ./build/c_streebog
 	
 v_streebog: $(SRC)
 	$(CC) -lc -mavx2 -O3 -D_VERBOSE=1 -fPIC $(SRC)  -o ./build/v_streebog	
@@ -35,7 +39,7 @@ gdb:
 	gdb --args ./build/asm_streebog
 	#gdb --args ./build/asm_streebog -b
 
-
+	                                          
 
 
 	
