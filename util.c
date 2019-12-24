@@ -159,8 +159,9 @@ int benchmark(){
 	
 	clock_gettime (CLOCK_REALTIME, &mt1);
 	
-	GOST34112012Init(&ctx, 64 );
+	
 	for(int i=0;i<MAX;i++){
+		GOST34112012Init(&ctx, 64 );
 		GOST34112012Update(&ctx, block, len );
 		GOST34112012Final(&ctx, &digest[0]);
 		GOST34112012Cleanup( &ctx );		

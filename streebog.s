@@ -185,7 +185,6 @@ GOST34112012Final:
 	stosb
 	
 	xor		al, al
-	
 	#zero  pad 
 	rep 	stosb	
 	
@@ -258,7 +257,6 @@ stage3_exit:
 	
 	xor		rax, rax
 	ret
-
 #------------------ g_func  ---------------------------- 
 	.p2align 4,,15
 g_func:
@@ -297,7 +295,8 @@ g_func:
 	
 	.p2align 3,,
 g_func_loop:
-	prefetchnta ymmword ptr [rsi+128]
+	prefetchnta ymmword ptr [rsi+CXC_SIZE]
+	
 	# Y2 xor Y0 -> Y1  ( D xor key)
 	vpxor 	ymm2,  ymm4, ymm0
 	vpxor 	ymm3,  ymm5, ymm1

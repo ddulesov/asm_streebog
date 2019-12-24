@@ -28,30 +28,28 @@
 	VEXTRACTI128  x\dst2, y\src2, 1
 	
 	lps_op3 r8, 0, x\src1, x\src2, x\dst1, x\dst2
-	mov	[rsp]+0  , r8
+	mov	[rsp]  , r8
 
-	#1
-	lps_op3 r9, 1, x\src1, x\src2, x\dst1, x\dst2
-	mov [rsp]+8 , r9
+	lps_op3 r8, 1, x\src1, x\src2, x\dst1, x\dst2
+	mov [rsp]+8 , r8
 
-	#2
-	lps_op3 r10, 2, x\src1, x\src2, x\dst1, x\dst2
-	mov	[rsp]+16, r10
+	lps_op3 r8, 2, x\src1, x\src2, x\dst1, x\dst2
+	mov	[rsp]+16, r8
 	
-	lps_op3 r11, 3, x\src1, x\src2, x\dst1, x\dst2
-	mov [rsp]+24, r11
+	lps_op3 r8, 3, x\src1, x\src2, x\dst1, x\dst2
+	mov [rsp]+24, r8
 
 	lps_op3 r8, 4, x\src1, x\src2, x\dst1, x\dst2
 	mov	[rsp]+32 , r8
 	
-	lps_op3 r9, 5, x\src1, x\src2, x\dst1, x\dst2
-	mov [rsp]+40 , r9
+	lps_op3 r8, 5, x\src1, x\src2, x\dst1, x\dst2
+	mov [rsp]+40 , r8
 	
-	lps_op3 r10, 6, x\src1, x\src2, x\dst1, x\dst2
-	mov	[rsp]+48, r10
+	lps_op3 r8, 6, x\src1, x\src2, x\dst1, x\dst2
+	mov	[rsp]+48, r8
 
-	lps_op3 r11, 7, x\src1, x\src2, x\dst1, x\dst2
-	mov [rsp]+56, r11
+	lps_op3 r8, 7, x\src1, x\src2, x\dst1, x\dst2
+	mov [rsp]+56, r8
 	
 	vmovdqa	y\dst1, [rsp]
 	vmovdqa	y\dst2, [rsp] + 32

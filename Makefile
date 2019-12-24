@@ -4,18 +4,18 @@ SRC = util.c core.c
 O=$(SRC:%.c=%.o)
 OBJS = $(addprefix $(OBJDIR)/, $O )
 #-ggdb 
-CFLAGS := -O3 -fPIC -DASM_STREEBOG=1 -no-pie -mavx -mavx2 -masm=intel
+CFLAGS=-O3 -fPIC -DASM_STREEBOG=1 -no-pie -mavx -mavx2 -masm=intel
 
 all: asm_streebog c_streebog v_streebog
 
 dlib:   $(OBJDIR)/streebog.o  
-	gcc -shared -o $(OBJDIR)/libstreebog.so $(OBJDIR)/streebog.o
+	$(CC) -shared -o $(OBJDIR)/libstreebog.so $(OBJDIR)/streebog.o
 
 asm_streebog: $(OBJDIR)/streebog.o $(OBJS)
-	gcc -no-pie  -s  -lc -fPIC  $(OBJDIR)/streebog.o $(OBJS)  -o ./build/asm_streebog 
+	$(CC) -no-pie  -s  -lc -fPIC  $(OBJDIR)/streebog.o $(OBJS)  -o ./build/asm_streebog 
 
 asm_streebog_dyn: dlib $(OBJS)
-	gcc -L./build/    $(OBJS) -lstreebog  -o ./build/asm_streebog_dyn 
+	$(CC) -L./build/    $(OBJS) -lstreebog  -o ./build/asm_streebog_dyn 
 
 	
 c_streebog: $(SRC)
