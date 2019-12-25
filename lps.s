@@ -24,10 +24,37 @@
 .endm
 
 
+.macro lps_opd acr1, acr2, acr3, acr4, xr, i, ai, op=xor
+	vpextrd		ebx,   \xr, \i
+	movzx		r8d,   bl
+	movzx		dx,    bh
+	
+	\op			\acr1, [rax + r8 * 8]   + AXC_SIZE * \ai
+	\op			\acr2, [rax + rdx * 8]  + AXC_SIZE * \ai
+	
+	SHR 		rbx,   16
+	
+	movzx		r8d,   bl
+	movzx		dx,    bh
+	\op			\acr3, [rax + r8 * 8]  + AXC_SIZE * \ai
+	\op			\acr4, [rax + rdx * 8]  + AXC_SIZE * \ai
+	
+.endm
 
+.macro lps_opd2  xr1, xr2, i
+	lps_opd r9, r10, r11, r12, \xr1, \i,   0,  mov
+	lps_opd r9, r10, r11, r12, \xr1, \i+2, 1
 
+	lps_opd r9, r10, r11, r12, \xr2, \i,   4
+	lps_opd r9, r10, r11, r12, \xr2, \i+2, 5
 
+	lps_opd r9, r10, r11, r12, xmm8, \i,   2
+	lps_opd r9, r10, r11, r12, xmm8, \i+2, 3
 
+	lps_opd r9, r10, r11, r12, xmm9, \i,   6
+	lps_opd r9, r10, r11, r12, xmm9, \i+2, 7
+
+.endm
 
 #-------------------------------------	
 	.p2align 4,,15
@@ -38,36 +65,30 @@
 	VEXTRACTI128  xmm9, y\src2, 1
 	
 	#available  to use: dst1, dst2, xmm10
-	lps_op2 x\src1, x\src2, 0
+	lps_opd2 x\src1, x\src2, 0
 	
-	vmovq  x\dst1, r10
+	vmovq  x\dst1, r9
+	vpinsrq x\dst1, x\dst1, r10, 1
+	
 	vmovq  x\dst2, r11
-	vpunpcklqdq   x\dst1, x\dst1, x\dst2
+	vpinsrq x\dst2, x\dst2, r12, 1
+	
+	vinserti128   y\dst1, y\dst1, x\dst2, 1
 	
 	#available  to use: dst2, xmm10 
 	
-	lps_op2 x\src1, x\src2, 1
+	lps_opd2 x\src1, x\src2, 1
 	
-	vmovq  xmm10, r10
+	vmovq  xmm10, r9
+	vpinsrq xmm10, xmm10, r10, 1
+	
 	vmovq  x\dst2, r11
-	vpunpcklqdq   x\dst2,  xmm10, x\dst2
+	vpinsrq x\dst2, x\dst2, r12, 1
+	
+	vinserti128   y\dst2, ymm10, x\dst2, 1
 
-	vinserti128   y\dst1, y\dst1, x\dst2, 1	
+	#available  to use:  xmm10 
 	
-	#available  to use: dst2, xmm10 
 	
-	lps_op2 x\src1, x\src2, 2
-	
-	vmovq  xmm10, r10
-	vmovq  x\dst2, r11
-	vpunpcklqdq   xmm10,  xmm10, x\dst2
-	
-	#available  to use: dst2
-	lps_op2 x\src1, x\src2, 3
-	
-	vmovq  x\dst2, r10
-	vpinsrq x\dst2, x\dst2, r11, 1
-	
-	vinserti128   y\dst2,  ymm10, x\dst2, 1
 	
 .endm

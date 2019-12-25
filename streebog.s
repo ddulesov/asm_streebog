@@ -261,15 +261,16 @@ stage3_exit:
 	.p2align 4,,15
 g:
 	push	rsi
-	push	rbp
+	#push	rbp
 	push	rbx
 	push	rdx
+	push	r12
 	
 	#reserv 64 byte for lps. beware all subsequents calls must not allocate stack
 	#or should be done before lps call
-	mov		rbp, rsp
-	sub 	rsp, 64 #reserv buffer and return address (calling lps)
-	and		rsp, -32 #AVX require 32-bit aligned stack 
+	#mov		rbp, rsp
+	#sub 	rsp, 64 #reserv buffer and return address (calling lps)
+	#and		rsp, -32 #AVX require 32-bit aligned stack 
 		
 	#copy  h -> Y3
 	#vmovdqa	ymm6, ymm0
@@ -279,8 +280,6 @@ g:
 	vpxor 	ymm2, ymm2, ymm0
 	vpxor 	ymm3, ymm3, ymm1
 	
-	lea		rax, AXC[rip]
-
 	
 	#load data ->Y2 TODO . load using xmm
 	vmovdqu ymm4, ymmword ptr [rsi]
@@ -289,12 +288,14 @@ g:
 	vpxor 	ymm6, ymm0, ymm4
 	vpxor 	ymm7, ymm1, ymm5
 	
+	lea		rax, AXC[rip]
 	lea		rsi, CXC[rip] # rsi = cx[i]
 	mov		rcx, 12
 	
 	lps_macro
 	#call	lps #Y1 -> Y0
 	
+	#start loop,  key:Y0(ymm0, ymm1), buffer:Y2(ymm4, ymm5) 
 	.p2align 3,,
 _loop:
 	prefetchnta ymmword ptr [rsi+2 * CXC_SIZE]
@@ -326,10 +327,11 @@ _loop:
 	vpxor 	ymm1,  ymm1, ymm7
 	
 _exit:
-	mov		rsp, rbp
+	#mov		rsp, rbp
+	pop		r12
 	pop		rdx
 	pop		rbx
-	pop		rbp
+	#pop		rbp
 	pop		rsi
 	ret
 
