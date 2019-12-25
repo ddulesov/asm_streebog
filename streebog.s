@@ -18,7 +18,7 @@ sh_N		= 64
 sh_Sigma	= 128
 sh_buffer   = 192
 
-.type           g_func   , @function
+.type                g   , @function
 .type GOST34112012Final  , @function
 .type GOST34112012Update , @function
 .type GOST34112012Init   , @function
@@ -119,7 +119,7 @@ stage_loop:
 	vmovdqa ymm2, ymmword ptr [r12 + sh_N + 0 ]
 	vmovdqa ymm3, ymmword ptr [r12 + sh_N + 32 ]
 
-	call	g_func #doesn't alter rsi, rdi
+	call	g #doesn't alter rsi, rdi
 
 	#self.n.add(&BUFFER512);
 	lea		rdi, [r12 + sh_N] #load low qword
@@ -197,7 +197,7 @@ GOST34112012Final:
 	
 	vmovdqa ymm2, ymmword ptr [rdi + sh_N + 0 ]
 	vmovdqa ymm3, ymmword ptr [rdi + sh_N + 32 ]
-	call	g_func  #rdi, rsi not changed
+	call	g  #rdi, rsi not changed
 	
 	#buf.b64[0] = (self.bufsize as u64) << 3;
 	#self.n.add(&buf);
@@ -220,14 +220,14 @@ GOST34112012Final:
 	vpxor 	ymm2, ymm2, ymm2
 	vpxor 	ymm3, ymm3, ymm3
 	lea		rsi, [rdi + sh_N]	
-	call	g_func
+	call	g
 	
 	#self.h.g(&BUFFER0, self.sigma.as_ptr());
 	#zerro buffer
 	vpxor 	ymm2, ymm2, ymm2
 	vpxor 	ymm3, ymm3, ymm3
 	lea		rsi, [rdi + sh_Sigma]
-	call	g_func
+	call	g
 	
 	#save   ymm0, ymm1 to h
 	vmovdqa ymmword ptr [rdi + sh_h + 0 ], ymm0
@@ -259,7 +259,7 @@ stage3_exit:
 	ret
 #------------------ g_func  ---------------------------- 
 	.p2align 4,,15
-g_func:
+g:
 	push	rsi
 	push	rbp
 	push	rbx
@@ -272,43 +272,42 @@ g_func:
 	and		rsp, -32 #AVX require 32-bit aligned stack 
 		
 	#copy  h -> Y3
-	vmovdqa	ymm6, ymm0
-	vmovdqa	ymm7, ymm1
+	#vmovdqa	ymm6, ymm0
+	#vmovdqa	ymm7, ymm1
 	
 	#  h xor N -> Y1
 	vpxor 	ymm2, ymm2, ymm0
 	vpxor 	ymm3, ymm3, ymm1
 	
 	lea		rax, AXC[rip]
-	lps_macro
-	#call	lps #Y1 -> Y0
+
 	
 	#load data ->Y2 TODO . load using xmm
 	vmovdqu ymm4, ymmword ptr [rsi]
 	vmovdqu ymm5, ymmword ptr [rsi+32]
 
-	vpxor 	ymm6, ymm6, ymm4
-	vpxor 	ymm7, ymm7, ymm5
+	vpxor 	ymm6, ymm0, ymm4
+	vpxor 	ymm7, ymm1, ymm5
 	
 	lea		rsi, CXC[rip] # rsi = cx[i]
 	mov		rcx, 12
 	
+	lps_macro
+	#call	lps #Y1 -> Y0
+	
 	.p2align 3,,
-g_func_loop:
-	prefetchnta ymmword ptr [rsi+CXC_SIZE]
+_loop:
+	prefetchnta ymmword ptr [rsi+2 * CXC_SIZE]
 	
 	# Y2 xor Y0 -> Y1  ( D xor key)
 	vpxor 	ymm2,  ymm4, ymm0
 	vpxor 	ymm3,  ymm5, ymm1
 	
-	#load CX[i] -> Y2
-	vmovdqa ymm4, ymmword ptr [rsi]
-	vmovdqa ymm5, ymmword ptr [rsi+32]
-	
-	#Y2 xor Y0 -> Y2
-	vpxor 	ymm4,  ymm4, ymm0
-	vpxor 	ymm5,  ymm5, ymm1
-	
+	 
+	#CX[i] xor Y0 -> Y2
+	vpxor 	ymm4,  ymm0, ymmword ptr [rsi]
+	vpxor 	ymm5,  ymm1, ymmword ptr [rsi+32]
+	add		rsi,   CXC_SIZE
 	#Y2 -> Y0
 	#call	lps
 	lps_macro  mm4, mm5, mm0, mm1
@@ -317,9 +316,8 @@ g_func_loop:
 	#call	lps
 	lps_macro  mm2, mm3, mm4, mm5
 	
-	add		rsi, CXC_SIZE
 	sub		rcx, 1
-	jne		g_func_loop
+	jne		_loop
 	
 	#end of loop. Y0 xor Y2 -> Y0
 	vpxor 	ymm0,  ymm0, ymm4
@@ -327,7 +325,7 @@ g_func_loop:
 	vpxor 	ymm0,  ymm0, ymm6
 	vpxor 	ymm1,  ymm1, ymm7
 	
-g_func_exit:
+_exit:
 	mov		rsp, rbp
 	pop		rdx
 	pop		rbx

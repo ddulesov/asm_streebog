@@ -157,8 +157,8 @@ int benchmark(){
 	for (int i = 0; i < len; i++)
         block[i] = (unsigned char) (i & 0xff);
 	
+	__sync_synchronize();
 	clock_gettime (CLOCK_REALTIME, &mt1);
-	
 	
 	for(int i=0;i<MAX;i++){
 		GOST34112012Init(&ctx, 64 );
@@ -167,6 +167,7 @@ int benchmark(){
 		GOST34112012Cleanup( &ctx );		
 	}
 	clock_gettime (CLOCK_REALTIME, &mt2);
+	__sync_synchronize();
 	
 	tt=1000000000*(mt2.tv_sec - mt1.tv_sec)+(mt2.tv_nsec - mt1.tv_nsec);
 	

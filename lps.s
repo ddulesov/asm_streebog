@@ -1,57 +1,73 @@
 .intel_syntax noprefix
 
-.macro lps_op acr, ir, xr, i, ai, op=xor
-	vpextrb		e\ir, \xr, \i
-	\op			\acr, [rax + r\ir * 8]  + AXC_SIZE * \ai
+.macro lps_op acr1, acr2, xr, i, ai, op=xor
+	vpextrw		ebx, \xr, \i
+	movzx		r9d, bl
+	movzx		dx,  bh
 	
+	\op			\acr1, [rax + r9 * 8]  + AXC_SIZE * \ai
+	\op			\acr2, [rax + rdx * 8]  + AXC_SIZE * \ai
 .endm
 
-.macro lps_op2 acr , xr, i, ai1, ai2, op=xor
-	vpextrb		ebx, \xr, \i
-	vpextrb		edx, \xr, \i + 8
-	\op			\acr, [rax + rbx * 8]  + AXC_SIZE * \ai1
-	xor			\acr, [rax + rdx * 8]  + AXC_SIZE * \ai2
-	
+.macro lps_op2  xr1, xr2, i
+	lps_op r10, r11, \xr1, \i,   0,  mov
+	lps_op r10, r11, \xr1, \i+4, 1
+
+	lps_op r10, r11, \xr2, \i,   4
+	lps_op r10, r11, \xr2, \i+4, 5
+
+	lps_op r10, r11, xmm8, \i,   2
+	lps_op r10, r11, xmm8, \i+4, 3
+
+	lps_op r10, r11, xmm9, \i,   6
+	lps_op r10, r11, xmm9, \i+4, 7
 .endm
 
-.macro lps_op3 acr, i, x1, x2, x3, x4 
-	lps_op2 \acr,  \x1,  \i,    0,1, mov
-	lps_op2 \acr,  \x2,  \i,    4,5
-	lps_op2 \acr,  \x3,  \i,    2,3
-	lps_op2 \acr,  \x4,  \i,    6,7
-.endm
+
+
+
+
+
+
 #-------------------------------------	
 	.p2align 4,,15
 .macro lps_macro src1=mm2, src2=mm3, dst1=mm0, dst2=mm1
+	xor 	rdx, rdx
 	
-	VEXTRACTI128  x\dst1, y\src1, 1
-	VEXTRACTI128  x\dst2, y\src2, 1
+	VEXTRACTI128  xmm8, y\src1, 1
+	VEXTRACTI128  xmm9, y\src2, 1
 	
-	lps_op3 r8, 0, x\src1, x\src2, x\dst1, x\dst2
-	mov	[rsp]  , r8
+	#available  to use: dst1, dst2, xmm10
+	lps_op2 x\src1, x\src2, 0
+	
+	vmovq  x\dst1, r10
+	vmovq  x\dst2, r11
+	vpunpcklqdq   x\dst1, x\dst1, x\dst2
+	
+	#available  to use: dst2, xmm10 
+	
+	lps_op2 x\src1, x\src2, 1
+	
+	vmovq  xmm10, r10
+	vmovq  x\dst2, r11
+	vpunpcklqdq   x\dst2,  xmm10, x\dst2
 
-	lps_op3 r8, 1, x\src1, x\src2, x\dst1, x\dst2
-	mov [rsp]+8 , r8
-
-	lps_op3 r8, 2, x\src1, x\src2, x\dst1, x\dst2
-	mov	[rsp]+16, r8
+	vinserti128   y\dst1, y\dst1, x\dst2, 1	
 	
-	lps_op3 r8, 3, x\src1, x\src2, x\dst1, x\dst2
-	mov [rsp]+24, r8
-
-	lps_op3 r8, 4, x\src1, x\src2, x\dst1, x\dst2
-	mov	[rsp]+32 , r8
+	#available  to use: dst2, xmm10 
 	
-	lps_op3 r8, 5, x\src1, x\src2, x\dst1, x\dst2
-	mov [rsp]+40 , r8
+	lps_op2 x\src1, x\src2, 2
 	
-	lps_op3 r8, 6, x\src1, x\src2, x\dst1, x\dst2
-	mov	[rsp]+48, r8
-
-	lps_op3 r8, 7, x\src1, x\src2, x\dst1, x\dst2
-	mov [rsp]+56, r8
+	vmovq  xmm10, r10
+	vmovq  x\dst2, r11
+	vpunpcklqdq   xmm10,  xmm10, x\dst2
 	
-	vmovdqa	y\dst1, [rsp]
-	vmovdqa	y\dst2, [rsp] + 32
+	#available  to use: dst2
+	lps_op2 x\src1, x\src2, 3
+	
+	vmovq  x\dst2, r10
+	vpinsrq x\dst2, x\dst2, r11, 1
+	
+	vinserti128   y\dst2,  ymm10, x\dst2, 1
 	
 .endm
