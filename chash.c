@@ -1,7 +1,7 @@
 #include "core.h"
 #include <string.h>
 
-#ifndef ASM_STREEBOG
+#ifdef C_STREEBOG
 
 #include <immintrin.h>
 #if defined(__GNUC__)
@@ -148,10 +148,9 @@ GOST34112012Update(GOST34112012Context *CTX, const unsigned char *data, size_t l
         len  -= 64;
     }
 
-    if (len) {
-        memcpy(&CTX->buffer, data, len);
-        
-    }
+    
+    memcpy(&CTX->buffer, data, len);
+    
     CTX->bufsize = len;
 }
 

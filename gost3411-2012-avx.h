@@ -1,9 +1,9 @@
 
-#ifndef _SSE41_H
-#define _SSE41_H
+#ifndef _AVX_H
+#define _AVX_H
 
-#ifndef __GOST3411_HAS_AVX__
-#error "require __GOST3411_HAS_AVX__ in config.h"
+#ifndef __AVX2__
+#error "require avx2 compiler support. gcc -mavx2 -dM -E - </dev/null"
 #endif
 
 #include "gost3411-2012-precalc.h"
@@ -124,8 +124,8 @@
 
 #define YMM_LPS(ymm0, ymm1)  { \
     __m256i tx0, tx1; \
-	YMM_EXTRACT2(0, tx0, ymm0, ymm1); \
-	YMM_EXTRACT2(32, tx1, ymm0, ymm1); \
-	ymm0 = tx0; ymm1 = tx1;  \
+    YMM_EXTRACT2(0, tx0, ymm0, ymm1); \
+    YMM_EXTRACT2(32, tx1, ymm0, ymm1); \
+    ymm0 = tx0; ymm1 = tx1;  \
 } 
 #endif

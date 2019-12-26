@@ -1,29 +1,26 @@
-#define __GOST3411_HAS_AVX__
-#define _DEBUG 1
+//#define _DEBUG 1
 
 #pragma once
 #ifndef _CORE_H
 #define _CORE_H
 
-#if defined _MSC_VER
-	#define ALIGN(x) __declspec(align(x))
-#else
-	#define ALIGN(x) __attribute__ ((__aligned__(x)))
-#endif
-
-#if defined   __GOST3411_HAS_SSE41__
-	#define ALIGNED  ALIGN(16)
-#elif defined __GOST3411_HAS_AVX__
-	#define ALIGNED  ALIGN(32)
-#else
-	#error "for configuration set env variables or edit config.h"
-#endif
-
 #include <stdlib.h>
+
+#if defined _MSC_VER
+    #define ALIGN(x) __declspec(align(x))
+#else
+    #define ALIGN(x) __attribute__ ((__aligned__(x)))
+#endif
+
+#ifndef SIMD_ALIGN
+    #define SIMD_ALIGN  16
+#endif
+
+#define ALIGNED  ALIGN( SIMD_ALIGN )
 
 typedef ALIGNED union u512
 {
-	unsigned long long QWORD[8];
+    unsigned long long QWORD[8];
 } u512_t;
 
 ALIGNED typedef struct GOST34112012Context
