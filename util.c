@@ -87,17 +87,15 @@ const unsigned char hash[]=
 //const char *data = "01234567890123456789012345678901234567890123456789012345678901200000000";
 static  unsigned char digest[64];
 
-void print_buffer(const unsigned char* ptr, int ptr_len){
-	/*
-	for(int i=0; i<64; i++){
-		if(i>0 && i % 16 == 0) printf("  ");
-		printf("%02i ", i);
-	}
-	*/
+void inline print_hex(const unsigned char* ptr, int ptr_len){
 	for(int i=0;i<ptr_len;i++){
 		if(i>0 && i % 16 == 0) printf("  ");
 	 	printf("%02x ", ptr[i] );
 	}
+}
+
+void print_buffer(const unsigned char* ptr, int ptr_len){
+	print_hex(ptr, ptr_len);
 	puts("");
 }
 
@@ -116,19 +114,36 @@ void print_ymm(const unsigned char *ptr, int idx){
 		printf("%02i ", j);
 	}
 	puts("");
-	for(int i=0;i<10;i++){
+	for(int i=0;i<16;i++){
 		if( !CHECK_BIT(idx, i) ) continue;
 		
 		printf("ymm%02i ", i);
+		const unsigned char* yptr = ptr + i * 32;
 		
-		for(int j=0;j<32;j++, ptr++){
+		for(int j=0;j<32;j++, yptr++){
 			if(j==16) printf("  ");
-			printf("%02x ",*ptr);
+			printf("%02x ",*yptr);
 		}
 		puts("");
 	}
 	puts(sep);
 	
+}
+
+void print_g(const unsigned char *ptr){
+	puts(sep);
+	puts("key xmm0 xmm2 xmm1 xmm3");
+	
+	print_hex(ptr, 16); print_hex(ptr+2 * 32, 16);
+	puts("");
+	print_hex(ptr+32, 16); print_hex(ptr+3*32, 16);
+
+	puts("\nbuff xmm4 xmm6 xmm5 xmm7");
+	
+	print_hex(ptr+4*32, 16); print_hex(ptr+6 * 32, 16);
+	puts("");
+	print_hex(ptr+5*32, 16); print_hex(ptr+7*32, 16);	
+	puts(sep);
 }
 
 extern void _test();

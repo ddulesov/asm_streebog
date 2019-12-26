@@ -71,14 +71,11 @@ static inline void g(u512_t *h, const u512_t *N, const unsigned char *m) {
 	__m256i ymm2, ymm3;
 	register unsigned long long r0, r1, r2, r3;
 	
-	
 #ifdef _VERBOSE
 	//print_buffer( m, 64 );
 #endif 
 	//key
 	LOAD_YMM(h, ymm0, ymm1);
-	
-	
 	
 	//into_xor_m ( n )
 	XOR_YMM((*N), ymm0, ymm1);
@@ -87,15 +84,42 @@ static inline void g(u512_t *h, const u512_t *N, const unsigned char *m) {
 	//buffer
 	LOADU_YMM(m, ymm2, ymm3);
 
+
+
 	for (int i = 0; i < 12; i++) {
-		//buffer.into_xor(key)
+		
+
+
 		XOR_YMM2(ymm2, ymm3, ymm0, ymm1);
+		
+#ifdef _VERBOSE
+	//puts("key");
+	//print_buffer( &ymm0, 32 );
+	//print_buffer( &ymm1, 32 );
+	puts("\n after xor");
+	
+	print_buffer( &ymm2, 32 );
+	print_buffer( &ymm3, 32 );
+#endif //buffer.into_xor(key)
+		
 		//buffer.lps()
 		YMM_LPS(ymm2, ymm3);
+		
+#ifdef _VERBOSE
+	//puts("key");
+	//print_buffer( &ymm0, 32 );
+	//print_buffer( &ymm1, 32 );
+	puts("\after lps");
+	print_buffer( &ymm2, 32 );
+	print_buffer( &ymm3, 32 );
+#endif //buffer.into_xor(key)	
+	
 		//key.into_xor( c[i] )
 		XOR_YMM(C[i], ymm0, ymm1);
 		//key.lps()
 		YMM_LPS(ymm0, ymm1);
+		
+
 	}
 
 	//key.xor_r( buffer )
@@ -147,6 +171,7 @@ stage3(GOST34112012Context *CTX)
 {
 	
 	#ifdef _VERBOSE
+	/*
 		puts("stage3");
 		print_buffer( CTX_FIELD(CTX,buffer) , 64 );
 		puts("h");
@@ -155,7 +180,7 @@ stage3(GOST34112012Context *CTX)
 		print_buffer( CTX_FIELD(CTX,N), 64 );
 		puts("Sigma");
 		print_buffer( CTX_FIELD(CTX,Sigma), 64 );
-	
+	*/
 	#endif 
 	
     ALIGNED u512_t buf = {{ 0 }};
@@ -169,7 +194,7 @@ stage3(GOST34112012Context *CTX)
     add512(&(CTX->Sigma), (const u512_t *) &CTX->buffer[0]);
 
 	#ifdef _VERBOSE
-		
+	/*	
 		print_buffer( CTX_FIELD(CTX,buffer) , 64 );
 		puts("h");
 		print_buffer( CTX_FIELD(CTX,h) , 64 );
@@ -177,7 +202,7 @@ stage3(GOST34112012Context *CTX)
 		print_buffer( CTX_FIELD(CTX,N), 64 );
 		puts("Sigma");
 		print_buffer( CTX_FIELD(CTX,Sigma), 64 );
-	
+	*/
 	#endif 
 	
     g(&(CTX->h), &buffer0, (const unsigned char *) &(CTX->N));

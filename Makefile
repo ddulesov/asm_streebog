@@ -12,7 +12,7 @@ dlib:   $(OBJDIR)/streebog.o
 	$(CC) -shared -o $(OBJDIR)/libstreebog.so $(OBJDIR)/streebog.o
 
 asm_streebog: $(OBJDIR)/streebog.o $(OBJS)
-	$(CC) -no-pie  -s  -lc -fPIC  $(OBJDIR)/streebog.o $(OBJS)  -o ./build/asm_streebog 
+	$(CC) -no-pie  -lc -fPIC  $(OBJDIR)/streebog.o $(OBJS)  -o ./build/asm_streebog 
 
 asm_streebog_dyn: dlib $(OBJS)
 	$(CC) -L./build/    $(OBJS) -lstreebog  -o ./build/asm_streebog_dyn 

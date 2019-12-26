@@ -1,12 +1,14 @@
 .intel_syntax noprefix
 
+
+
 .include "const.s"
 .include "lps.s"
 .include "add.s"
 
-.ifdef _DEBUG
+#.ifdef _DEBUG
 .include "debug.s"
-.endif
+#.endif
 	
 .section .text
 
@@ -63,13 +65,12 @@ GOST34112012Init:
 #--- update hash ---
 	.p2align 4,,15
 GOST34112012Update:
-	push	rbx
-	push	rdx
-	push	r12
-	
 	#rdi    - context
 	#rsi    - data pointer
 	#rdx    - size 
+	push	rbx
+	push	rdx
+	push	r12
 	
 	test	rdx, rdx #data size == 0
 	jz		exit_update
@@ -257,81 +258,100 @@ stage3_exit:
 	
 	xor		rax, rax
 	ret
-#------------------ g_func  ---------------------------- 
+#------------------ g function  ---------------------------- 
 	.p2align 4,,15
 g:
 	push	rsi
-	#push	rbp
 	push	rbx
 	push	rdx
+	
 	push	r12
-	
-	#reserv 64 byte for lps. beware all subsequents calls must not allocate stack
-	#or should be done before lps call
-	#mov		rbp, rsp
-	#sub 	rsp, 64 #reserv buffer and return address (calling lps)
-	#and		rsp, -32 #AVX require 32-bit aligned stack 
+	push	r11
+	push	r10
+	push	r9
 		
-	#copy  h -> Y3
-	#vmovdqa	ymm6, ymm0
-	#vmovdqa	ymm7, ymm1
-	
-	#  h xor N -> Y1
-	vpxor 	ymm2, ymm2, ymm0
-	vpxor 	ymm3, ymm3, ymm1
-	
-	
-	#load data ->Y2 TODO . load using xmm
 	vmovdqu ymm4, ymmword ptr [rsi]
 	vmovdqu ymm5, ymmword ptr [rsi+32]
 
-	vpxor 	ymm6, ymm0, ymm4
-	vpxor 	ymm7, ymm1, ymm5
+	vpxor 	ymm14, ymm0, ymm4
+	vpxor 	ymm15, ymm1, ymm5
+	
+	vpxor 	ymm0, ymm2, ymm0
+	vpxor 	ymm1, ymm3, ymm1
+
+	VEXTRACTI128  xmm2, ymm0, 1
+	VEXTRACTI128  xmm3, ymm1, 1 #[ xmm0, xmm2, xmm1, xmm3 ]
 	
 	lea		rax, AXC[rip]
 	lea		rsi, CXC[rip] # rsi = cx[i]
-	mov		rcx, 12
+
+	lps_macro xmm0, xmm2, xmm1, xmm3,  xmm8, xmm9, xmm10, xmm11
 	
-	lps_macro
-	#call	lps #Y1 -> Y0
+	vmovdqa   xmm0,  xmm8
+	vmovdqa   xmm2,  xmm9
+	vmovdqa   xmm1,  xmm10
+	vmovdqa   xmm3,  xmm11
+	
+	VEXTRACTI128  xmm6, ymm4, 1
+	VEXTRACTI128  xmm7, ymm5, 1 #[ xmm4, xmm6, xmm5, xmm7 ]
+
+	mov		rcx, 12
+
+
+	
 	
 	#start loop,  key:Y0(ymm0, ymm1), buffer:Y2(ymm4, ymm5) 
 	.p2align 3,,
 _loop:
-	prefetchnta ymmword ptr [rsi+2 * CXC_SIZE]
+	prefetchnta byte ptr [rsi+ 1 * CXC_SIZE]
 	
-	# Y2 xor Y0 -> Y1  ( D xor key)
-	vpxor 	ymm2,  ymm4, ymm0
-	vpxor 	ymm3,  ymm5, ymm1
 	
-	 
-	#CX[i] xor Y0 -> Y2
-	vpxor 	ymm4,  ymm0, ymmword ptr [rsi]
-	vpxor 	ymm5,  ymm1, ymmword ptr [rsi+32]
+	
+	vpxor 	xmm8,  xmm4, xmm0
+	vpxor 	xmm9,  xmm6, xmm2
+	vpxor 	xmm10, xmm5, xmm1
+	vpxor 	xmm11, xmm7, xmm3	
+	
+	push	3840
+	call	_print_ymm
+	
+	lps_macro  xmm8, xmm9, xmm10, xmm11,  xmm4, xmm6, xmm5, xmm7
+	
+	
+	call	_print_g	
+	
+	vpxor 	xmm8,  xmm0, xmmword ptr [rsi]
+	vpxor 	xmm9,  xmm2, xmmword ptr [rsi+16]
+	vpxor 	xmm10, xmm1, xmmword ptr [rsi+32]
+	vpxor 	xmm11, xmm3, xmmword ptr [rsi+48]	
 	add		rsi,   CXC_SIZE
-	#Y2 -> Y0
-	#call	lps
-	lps_macro  mm4, mm5, mm0, mm1
-	
-	#Y1 -> Y2
-	#call	lps
-	lps_macro  mm2, mm3, mm4, mm5
+
+	lps_macro  xmm8, xmm9, xmm10, xmm11,  xmm0, xmm2, xmm1, xmm3
+		
+	#call  	_print_g
 	
 	sub		rcx, 1
 	jne		_loop
 	
-	#end of loop. Y0 xor Y2 -> Y0
-	vpxor 	ymm0,  ymm0, ymm4
-	vpxor 	ymm1,  ymm1, ymm5		
-	vpxor 	ymm0,  ymm0, ymm6
-	vpxor 	ymm1,  ymm1, ymm7
+	vpxor 	xmm0,  xmm0, xmm4
+	vpxor 	xmm2,  xmm2, xmm6
+	vpxor 	xmm1,  xmm1, xmm5		
+	vpxor 	xmm3,  xmm3, xmm7
+	
+	#assemble
+	vinserti128   ymm0, ymm0, xmm2, 1
+	vinserti128   ymm1, ymm1, xmm3, 1
+	
+	vpxor 	ymm0,  ymm0, ymm14
+	vpxor 	ymm1,  ymm1, ymm15
 	
 _exit:
-	#mov		rsp, rbp
+	pop		r9
+	pop		r10
+	pop		r11
 	pop		r12
 	pop		rdx
 	pop		rbx
-	#pop		rbp
 	pop		rsi
 	ret
 
