@@ -9,7 +9,7 @@ CFLAGS=-O3 -fPIC -DASM_STREEBOG=1 -no-pie -mavx -mavx2 -masm=intel
 all: asm_streebog c_streebog v_streebog
 
 dlib:   $(OBJDIR)/streebog.o  
-	$(CC) -shared -o $(OBJDIR)/libstreebog.so $(OBJDIR)/streebog.o
+	$(CC) -fPIC -shared -o $(OBJDIR)/libstreebog.so $(OBJDIR)/streebog.o
 
 asm_streebog: $(OBJDIR)/streebog.o $(OBJS)
 	$(CC) -no-pie  -lc -fPIC  $(OBJDIR)/streebog.o $(OBJS)  -o ./build/asm_streebog 

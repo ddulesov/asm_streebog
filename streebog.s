@@ -6,9 +6,9 @@
 .include "lps.s"
 .include "add.s"
 
-#.ifdef _DEBUG
+.ifdef _DEBUG
 .include "debug.s"
-#.endif
+.endif
 	
 .section .text
 
@@ -95,7 +95,7 @@ GOST34112012Update:
 	cmovg	rcx, rdx
 	#copy data to buffer
 	
-	#lea		rdi, [r12 + rbx + sh_buffer]
+	#lea	rdi, [r12 + rbx + sh_buffer]
 	lea		rdi, [r12 + r8]
 	lea		rdi, [rdi + sh_buffer]
 	
@@ -107,13 +107,13 @@ GOST34112012Update:
 	cmp		r8, 64
 	jne		exit_update
 	
-	#TODO optimize call stage2
+
 	mov		rbx, rsi #save data pointer
 	lea		rsi, [r12 + sh_buffer] #buffer pointer
 	
 	.p2align 3,,10
 stage_loop:
-	PREFETCHNTA 	    [rbx+64]
+	prefetchnta 	    [rbx+64]
 	#stage2
 		
 	# load N
@@ -266,89 +266,84 @@ g:
 	push	rdx
 	
 	push	r12
-	push	r11
-	push	r10
-	push	r9
+	#push	r11
+	#push	r10
+	#push	r9
 		
 	vmovdqu ymm4, ymmword ptr [rsi]
 	vmovdqu ymm5, ymmword ptr [rsi+32]
 
+	# data XOR h -> ymm{14,15}
 	vpxor 	ymm14, ymm0, ymm4
 	vpxor 	ymm15, ymm1, ymm5
 	
+	# h XOR N -> key ymm{0,1}
 	vpxor 	ymm0, ymm2, ymm0
-	vpxor 	ymm1, ymm3, ymm1
+	vpxor 	ymm1, ymm3, ymm1   
 
 	VEXTRACTI128  xmm2, ymm0, 1
-	VEXTRACTI128  xmm3, ymm1, 1 #[ xmm0, xmm2, xmm1, xmm3 ]
+	VEXTRACTI128  xmm3, ymm1, 1 #h xmm {0,2,1,3}
 	
 	lea		rax, AXC[rip]
 	lea		rsi, CXC[rip] # rsi = cx[i]
-
-	lps_macro xmm0, xmm2, xmm1, xmm3,  xmm8, xmm9, xmm10, xmm11
 	
+	# lps(h) -> key xmm{8,9,1,3}
+	lps_macro xmm0, xmm2, xmm1, xmm3,  xmm8, xmm9, xmm1, xmm3
+	
+	#TODO get rid of this moves
 	vmovdqa   xmm0,  xmm8
-	vmovdqa   xmm2,  xmm9
-	vmovdqa   xmm1,  xmm10
-	vmovdqa   xmm3,  xmm11
+	vmovdqa   xmm2,  xmm9      #key xmm {0,2,1,3}
+	#vmovdqa   xmm1,  xmm10
+	#vmovdqa   xmm3,  xmm11
 	
 	VEXTRACTI128  xmm6, ymm4, 1
-	VEXTRACTI128  xmm7, ymm5, 1 #[ xmm4, xmm6, xmm5, xmm7 ]
+	VEXTRACTI128  xmm7, ymm5, 1 #buffer xmm{4,6,5,7} 
 
 	mov		rcx, 12
-
-
-	
-	
 	#start loop,  key:Y0(ymm0, ymm1), buffer:Y2(ymm4, ymm5) 
 	.p2align 3,,
 _loop:
 	prefetchnta byte ptr [rsi+ 1 * CXC_SIZE]
-	
-	
-	
+	# buffer XOR key -> buffer xmm{8,9,5,7}
 	vpxor 	xmm8,  xmm4, xmm0
 	vpxor 	xmm9,  xmm6, xmm2
-	vpxor 	xmm10, xmm5, xmm1
-	vpxor 	xmm11, xmm7, xmm3	
+	vpxor 	xmm5,  xmm5, xmm1
+	vpxor 	xmm7,  xmm7, xmm3	
 	
-	push	3840
-	call	_print_ymm
+	# lps(buffer) -> buffer xmm{4,6,5,7}
+	lps_macro  xmm8, xmm9, xmm5, xmm7,  xmm4, xmm6, xmm5, xmm7
 	
-	lps_macro  xmm8, xmm9, xmm10, xmm11,  xmm4, xmm6, xmm5, xmm7
-	
-	
-	call	_print_g	
-	
+	# key XOR c[i] -> key xmm{8,9,1,3}
 	vpxor 	xmm8,  xmm0, xmmword ptr [rsi]
 	vpxor 	xmm9,  xmm2, xmmword ptr [rsi+16]
-	vpxor 	xmm10, xmm1, xmmword ptr [rsi+32]
-	vpxor 	xmm11, xmm3, xmmword ptr [rsi+48]	
+	vpxor 	xmm1,  xmm1, xmmword ptr [rsi+32]
+	vpxor 	xmm3,  xmm3, xmmword ptr [rsi+48]	
 	add		rsi,   CXC_SIZE
-
-	lps_macro  xmm8, xmm9, xmm10, xmm11,  xmm0, xmm2, xmm1, xmm3
-		
-	#call  	_print_g
 	
+	# lps(key) -> key xmm{0,2,1,3}
+	lps_macro  xmm8, xmm9, xmm1, xmm3,  xmm0, xmm2, xmm1, xmm3
+		
 	sub		rcx, 1
 	jne		_loop
 	
+	# key XOR buffer -> key xmm{0,2,1,3}
 	vpxor 	xmm0,  xmm0, xmm4
 	vpxor 	xmm2,  xmm2, xmm6
 	vpxor 	xmm1,  xmm1, xmm5		
 	vpxor 	xmm3,  xmm3, xmm7
 	
-	#assemble
+	#assemble key ymm{0,1}
 	vinserti128   ymm0, ymm0, xmm2, 1
 	vinserti128   ymm1, ymm1, xmm3, 1
 	
+	# key XOR h XOR data -> key ymm{0,1}
 	vpxor 	ymm0,  ymm0, ymm14
 	vpxor 	ymm1,  ymm1, ymm15
 	
 _exit:
-	pop		r9
-	pop		r10
-	pop		r11
+	#pop		r9
+	#pop		r10
+	#pop		r11
 	pop		r12
 	pop		rdx
 	pop		rbx
