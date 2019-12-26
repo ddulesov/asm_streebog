@@ -6,6 +6,7 @@ OBJS = $(addprefix $(OBJDIR)/, $O )
 #-ggdb 
 CFLAGS=-O3 -fPIC -DASM_STREEBOG=1 -no-pie -mavx -mavx2 -masm=intel
 
+
 all: asm_streebog c_streebog v_streebog
 
 dlib:   $(OBJDIR)/streebog.o  
@@ -16,13 +17,12 @@ asm_streebog: $(OBJDIR)/streebog.o $(OBJS)
 
 asm_streebog_dyn: dlib $(OBJS)
 	$(CC) -L./build/    $(OBJS) -lstreebog  -o ./build/asm_streebog_dyn 
-
 	
 c_streebog: $(SRC)
 	$(CC) -lc -mavx2 -s  -O3 -fPIC $(SRC)  -o ./build/c_streebog
 	
 v_streebog: $(SRC)
-	$(CC) -lc -mavx2 -O3 -D_VERBOSE=1 -fPIC $(SRC)  -o ./build/v_streebog	
+	$(CC) -lc -mavx2 -O3 -D_VERBOSE=1 -fPIC $(SRC) debug.c  -o ./build/v_streebog	
 
 $(OBJDIR)/%.o : %.c
 	$(CC)  $(CFLAGS) -c $< -o $@
