@@ -1,17 +1,16 @@
 # GOST R 34.11-2012 hash function with 512/256 bit digest
 
-This is x86-64 assembler implementation of the GOST R 34.11-2012 hash function known as STREEBOG. 
+This is x86-64 assembly implementation of the GOST R 34.11-2012 hash function known as STREEBOG. 
 The standard for this hash function developed by the Center for Information Protection and Special Communications of the Federal
 Security Service of the Russian Federation with participation of the Open joint-stock company "Information Technologies and Communication
 Systems" (InfoTeCS JSC).
 
 
 ## Build requirements
-
+* Linux OS
 * AVX2 capable CPU
-* GCC, Clang  compiler supporting 64-bit integers.
-* GNU make (or any compatible make).
-
+* GCC, Clang  c11 aware compiler supporting 64-bit integers and Intel intrinsics .
+* GNU make or any compatible .
 
 ## Benchmark results
 Intel i5-4210U CPU @ 1.70GHz
@@ -49,7 +48,7 @@ Intel i5-4210U CPU @ 1.70GHz
       7.39     22.62     49.39     76.53     76.51     85.17
       7.14     22.82     38.57     69.38     74.20     84.85
 ```
-### assembler AVX2 34.11-2012 (512 bit)
+### This assembly AVX2 34.11-2012 (512 bit)
     Mbps calculated on 50000 hashes
 ```
       16 b      64 b     256 b    1024 b      8 kb     64 kb
