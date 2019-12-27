@@ -15,8 +15,9 @@ Systems" (InfoTeCS JSC).
 
 ## Benchmark results
 Intel i5-4210U CPU @ 1.70GHz
-# https://github.com/adegtyarev/streebog   gost 34.11-2012 (512 bit) 
+### https://github.com/adegtyarev/streebog   gost 34.11-2012 (512 bit) 
     Mbps calculated on 50000 hashes
+
 ```
       16 b      64 b     256 b    1024 b      8 kb     64 kb
 
@@ -32,7 +33,7 @@ Intel i5-4210U CPU @ 1.70GHz
       6.91     22.24     51.36     73.84     84.86     81.66
 ```
 
-# c + AVX2 gost 34.11-2012 (512 bit) 
+### c + AVX2 gost 34.11-2012 (512 bit) 
     Mbps calculated on 50000 hashes
 ```
       16 b      64 b     256 b    1024 b      8 kb     64 kb
@@ -48,7 +49,7 @@ Intel i5-4210U CPU @ 1.70GHz
       7.39     22.62     49.39     76.53     76.51     85.17
       7.14     22.82     38.57     69.38     74.20     84.85
 ```
-# assembler AVX2 34.11-2012 (512 bit)
+### assembler AVX2 34.11-2012 (512 bit)
     Mbps calculated on 50000 hashes
 ```
       16 b      64 b     256 b    1024 b      8 kb     64 kb
