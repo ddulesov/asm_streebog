@@ -1,4 +1,8 @@
-
+/*
+ * Copyright (c) 2013, Alexey Degtyarev <alexey@renatasystems.org>. 
+ * All rights reserved.
+ *
+ */
 #ifndef _SSE41_H
 #define _SSE41_H
 

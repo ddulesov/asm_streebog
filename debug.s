@@ -78,8 +78,7 @@ PROLOG_LEN = 8
 
 .section .bss
 	.p2align 5,,15
-	.comm  buffer, 4096
-	
+	.comm  buffer, 4096	
 	
 .section .rodata
 	test_msg:
@@ -90,8 +89,6 @@ PROLOG_LEN = 8
 .section .text
 .extern  printf
 .extern  puts
-
-
 	
 	# .p2align 4,,15
 # _save_ymm:
@@ -106,51 +103,38 @@ PROLOG_LEN = 8
 	# push	rax #for 16bit layout
 	# push	rax
 	# mov		rax, 	[rax]
-	# push	rax
-	
+	# push	rax	
 	# ret
 	
 	# .p2align 4,,15
 # _restore_ymm:
-	# pop		rax #ret address
-	
+	# pop		rax #ret address	
 	# vmovdqa ymm0, YMMWORD PTR [rsp + 16]
 	# vmovdqa ymm1, YMMWORD PTR [rsp+32 + 16]
 	# vmovdqa ymm2, YMMWORD PTR [rsp+64 + 16]
-	# vmovdqa ymm3, YMMWORD PTR [rsp+96 + 16]
-	
+	# vmovdqa ymm3, YMMWORD PTR [rsp+96 + 16]	
 	# pop		rsp
 	# mov		[rsp], rax #new resp address
 	# ret
 
 	.p2align 4,,15
 _print_g:
-	ymm_prolog
-	
+	ymm_prolog	
 	mov		rdi, rsp
 	xor		rax, rax
-	call	print_g
-	
-	#tail   optimization
+	call    	print_g
 	ymm_epilog
 	ret		
 	
-	.p2align 4,,15
-	
+	.p2align 4,,15	
 _print_ymm:
-	ymm_prolog
-	
+	ymm_prolog	
 	mov		rdi, rsp
-	mov		rsi, [rbp + PROLOG_LEN*8]
-	
+	mov		rsi, [rbp + PROLOG_LEN*8]	
 	xor		rax, rax
-	call	print_ymm
-	
+	call    	print_ymm	
 	ymm_epilog
-	ret     8
-	
-	
-	
+	ret     8	
 	
 	.p2align 4,,15
 _print_buffer:
@@ -158,7 +142,7 @@ _print_buffer:
 	mov		rdi,	 [rbp + PROLOG_LEN*8]
 	xor		rax, rax
 	mov		rsi,  64
-	call	print_buffer
+	call    	print_buffer
 	
 	ymm_epilog
 	ret		8
@@ -167,7 +151,7 @@ _print_buffer:
 _print_contex:
 	ymm_prolog
 	mov		rdi,	 [rbp + PROLOG_LEN*8]
-	call	GOST34112012Dump
+	call    	GOST34112012Dump
 	ymm_epilog
 	ret		8
 
@@ -179,9 +163,9 @@ _print_contex:
 	ymm_prolog
 	xor		rax, rax
 	lea		rdi, null_m[rip]
-	call	puts	
-	lea 	rdi, msg\@[rip]
-	call 	puts
+	call    	puts	
+	lea     	rdi, msg\@[rip]
+	call    	puts
 	ymm_epilog
 	
 .endm

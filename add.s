@@ -1,58 +1,53 @@
 	# .p2align 4,,15
-# add_bytes:
-	# xor		rcx, rcx
-	# xor		rax, rax
+
 	
-	# .p2align 3,,10
-# loop:		
+# .macro add_block  src, dst, i
+	# mov	r10, 	qword ptr [\src + \i] 
+	# mov	r9, 	qword ptr [\src + \i+8] 
+	# adcx 	r10, 	qword ptr [\dst + \i]
+	# adcx	r9, 	qword ptr [\dst + \i+8]
+	# mov	qword ptr [\dst + \i], r10 
+	# mov	qword ptr [\dst + \i+8], r9
+
+# .endm
 	
-	# mov		r10, qword ptr [\src + rcx + 0] 
-	# mov		r9, qword ptr [\src + rcx + 8] 
-	# sahf	#restore cf
-	# adc		qword ptr [\dst + rcx + 0], r10
-	# adc		qword ptr [\dst + rcx + 8], r9
-	# lahf	#save cf
-	
-	# add		rcx, 16
-	# cmp		rcx, 64
-	# jne		loop
-	# ret
+# .macro add_bytes_macro	src=rsi, dst=rdi
+	# clc
+	# add_block \src, \dst, 0
+	# add_block \src, \dst, 16
+	# add_block \src, \dst, 32
+	# add_block \src, \dst, 48
+		
+# .endm
 	
 .macro add_bytes_macro	src=rsi, dst=rdi
-			
-	mov		r10, qword ptr [\src +  0] 
-	mov		r9, qword ptr [\src +   8] 
-	add 	qword ptr [\dst + 0], r10
-	adc		qword ptr [\dst + 8], r9
-
-	mov		r10, qword ptr [\src + 16] 
-	mov		r9, qword ptr [\src + 24] 
-	adc		qword ptr [\dst + 16], r10
-	adc		qword ptr [\dst + 24], r9	
-
-	mov		r10, qword ptr [\src + 32 ]
-	mov		r9, qword ptr [\src + 40] 
-	adc		qword ptr [\dst + 32], r10
-	adc		qword ptr [\dst + 40], r9
-
-	mov		r10, qword ptr [\src + 48] 
-	mov		r9, qword ptr [\src + 56] 
-	adc		qword ptr [\dst +  48], r10
-	adc		qword ptr [\dst +  56], r9
+	xor		eax, eax
+	xor 	rcx, rcx
+_add\@:	
+	add		al, -1
+	mov		r9, qword ptr [\src +  rcx + 0 ] 
+	adc 	qword ptr [\dst + rcx + 0 ], r9
+	mov		r9, qword ptr [\src +  rcx+ 8 ] 
+	adc		qword ptr [\dst + rcx + 8], r9
 	
+	setb	al
+	add     rcx, 16
+	cmp		rcx, 64
+	jne		_add\@
+		
 .endm
 
 .macro add_bytes512_macro  val=r10, dst=rdi
 	
-	xor		r9, r9
 	add 	qword ptr [\dst + 0], \val
-	adc		qword ptr [\dst + 8], r9
-	adc		qword ptr [\dst + 16], r9
-	adc		qword ptr [\dst + 24], r9
-	adc		qword ptr [\dst + 32], r9
-	adc		qword ptr [\dst + 40], r9
-	adc		qword ptr [\dst + 48], r9
-	adc		qword ptr [\dst + 56], r9
+	xor 	\val, \val
+	adc		qword ptr [\dst + 8], \val
+	adc		qword ptr [\dst + 16], \val
+	adc		qword ptr [\dst + 24], \val
+	adc		qword ptr [\dst + 32], \val
+	adc		qword ptr [\dst + 40], \val
+	adc		qword ptr [\dst + 48], \val
+	adc		qword ptr [\dst + 56], \val
 	
 .endm
 
